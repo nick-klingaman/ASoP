@@ -22,6 +22,7 @@ import cf,cfplot as cfp
 import matplotlib.pyplot as plt
 from matplotlib.colors import BoundaryNorm
 from matplotlib.ticker import MaxNLocator
+from scipy import interpolate
 
 def default_options():
 
@@ -79,6 +80,21 @@ def read_precip(model_dict):
     except:
         pass
     return(precip)
+
+def read_mask(model_dict):
+    constraint = iris.Constraint(model_dict['mask_constraint'],
+                                 latitude=lambda cell: model_dict['region'][0] <= cell <= model_dict['region'][1],
+                                 longitude=lambda cell: model_dict['region'][2] <= cell <= model_dict['region'][3])
+    mask = iris.load_cube(model_dict['mask_file'],constraint)*model_dict['scale_factor']#
+    try:
+        mask.coord('latitude').guess_bounds()
+    except:
+        pass
+    try:
+        mask.coord('longitude').guess_bounds()
+    except:
+        pass
+    return(mask)
 
 def compute_histogram(precip,bins):
 
@@ -597,7 +613,43 @@ def compute_autocorr(precip,model_dict):
     time_correlations = time_correlations / (nlon*nlat)
     return(time_correlations,time_max)
 
+def plot_spacetime_summary_regions(metric,regions,datasets,colors,symbols,metric_type,set_type,ymin=None,ymax=None):
+    # Plot regional summary metrics for all datasets
+    n_regions = len(regions)
+    n_datasets = len(datasets)
 
+    cfp.setvars(file='asop_coherence.'+set_type+'_precip_'+metric_type+'_metric_regions.ps',text_fontsize=18,axis_label_fontsize=14,legend_text_size=16)
+    cfp.gopen()
+    if ymin is None:
+        ymin=-0.2
+    if ymax is None:
+        ymax=1.0
+    cfp.gset(xmin=0,xmax=n_regions,ymin=ymin,ymax=ymax)
+    for j in xrange(n_datasets):
+        cfp.lineplot(x=np.arange(n_regions)+0.5,y=metric[j,:],lines=False,line_labels=False,marker=symbols[j],color=colors[j],label=datasets[j],markersize=10.0,linewidth=0.0)
+    cfp.lineplot(x=0,y=0,lines=False,line_labels=False,legend_location='best',xlabel='Region',ylabel='Average '+metric_type+' metric',xticks=np.arange(n_regions)+0.5,xticklabels=regions,yticks=np.round(np.arange(ymin,ymax,0.1),1))
+    cfp.gclose()
+
+
+def average_spacetime_summary(metric,region,mask=None):
+    # Average space-time summary metrics over a given region.
+    # Mask for land-only if requested.
+
+    grid_constraint = iris.Constraint(latitude=lambda cell: region[0] <= cell <= region[1],
+                                      longitude=lambda cell: region[2] <= cell <= region[3])
+    my_metric = metric.extract(grid_constraint)
+    weights = iris.analysis.cartography.area_weights(my_metric,normalize=False)
+    if mask is not None:
+        my_mask = mask.extract(grid_constraint)
+        try:
+            weights = np.where(my_mask.data == 1,weights,0)
+        except:
+            my_mask_interp = my_mask.regrid(my_metric,iris.analysis.Linear())
+            weights = np.where(my_mask_interp.data == 1,weights,0)
+    #weights_norm = weights / np.sum(weights)
+    metric_avg = my_metric.collapsed(('longitude','latitude'),iris.analysis.MEAN,weights=weights,mdtol=1)
+
+    return metric_avg
 
 def compute_spacetime_summary(precip,ndivs,twod=False,cyclic_lon=False):
 
@@ -663,6 +715,13 @@ def compute_spacetime_summary(precip,ndivs,twod=False,cyclic_lon=False):
                 lower_thresh[lat,lon] = 0
                 upper_thresh[lat,lon] = 0
 
+
+    if twod:
+        lon_coord = precip.coord('longitude')
+        lat_coord = precip.coord('latitude')
+        time_inter  = iris.cube.Cube(np.empty((nlat,nlon),np.float32),dim_coords_and_dims=[(lat_coord,0),(lon_coord,1)])
+        space_inter = iris.cube.Cube(np.empty((nlat,nlon),np.float32),dim_coords_and_dims=[(lat_coord,0),(lon_coord,1)])
+
     onon_count=0
     onoff_count=0
     offon_count=0
@@ -687,18 +746,46 @@ def compute_spacetime_summary(precip,ndivs,twod=False,cyclic_lon=False):
                             offoff_count=offoff_count+1
                         elif (this_precip[t+1] > upper_thresh[lat,lon]):
                             offon_count=offon_count+1
+            if twod:
+                if non > 0 and noff > 0:
+                    onon_count = onon_count/float(non)
+                    onoff_count = onoff_count/float(non)
+                    offoff_count = offoff_count/float(noff)
+                    offon_count = offon_count/float(noff)
+                    time_inter.data[lat,lon] = 0.5*((onon_count+offoff_count)-(onoff_count+offon_count))
+                else:
+                    time_inter.data[lat,lon] = -999 # Are these places where it rarely ever rains?
+                non=0
+                noff=0
+                onon_count=0
+                onoff_count=0
+                offon_count=0
+                offoff_count=0
+
+    if twod:
+        print '----> Info: Computed temporal intermittency metrics as 2D array.'
+    else:
+        onon_count = onon_count/float(non)
+        offoff_count = offoff_count/float(noff)
+        onoff_count = onoff_count/float(non)
+        offon_count = offon_count/float(noff)
+        time_inter = 0.5*((onon_count+offoff_count)-(onoff_count+offon_count))
+        print '-----> Info: Temporal intermittency measure p(upper|upper): ',onon_count
+        print '-----> Info: Temporal intermittency measure p(lower|lower): ',offoff_count
+        print '-----> Info: Temporal intermittency measure p(upper|lower): ',offon_count
+        print '-----> Info: Temporal intermittency measure p(lower|upper): ',onoff_count
+        print '----> Info: Combined temporal intermittency measure: ',time_inter
 
 
-    onon_count = onon_count/float(non)
-    offoff_count = offoff_count/float(noff)
-    onoff_count = onoff_count/float(non)
-    offon_count = offon_count/float(noff)
-    time_inter = 0.5*((onon_count+offoff_count)-(onoff_count+offon_count))
-    print '-----> Info: Temporal intermittency measure p(upper|upper): ',onon_count
-    print '-----> Info: Temporal intermittency measure p(lower|lower): ',offoff_count
-    print '-----> Info: Temporal intermittency measure p(upper|lower): ',offon_count
-    print '-----> Info: Temporal intermittency measure p(lower|upper): ',onoff_count
-    print '----> Info: Combined temporal intermittency measure: ',time_inter
+    if cyclic_lon:
+        my_precip=np.empty((nt,nlat,nlon+2))
+        my_precip[:,:,1:nlon+1]= precip.data[:,:,:]
+        my_precip[:,:,0] = precip.data[:,:,nlon-1]
+        my_precip[:,:,nlon+1]=precip.data[:,:,0]
+        lon_range=xrange(nlon)
+    else:
+        my_precip = precip.data
+        lon_range=xrange(1,nlon-1)
 
     onon_count=0
     onoff_count=0
@@ -706,30 +793,80 @@ def compute_spacetime_summary(precip,ndivs,twod=False,cyclic_lon=False):
     offoff_count=0
     non=0
     noff=0
-    for lon in xrange(1,nlon-1,3):
-        for lat in xrange(1,nlat-1,3):
+    for lon in lon_range:
+        for lat in xrange(1,nlat-1):
             for t in xrange(nt-1):
-                if (precip.data[t,lat,lon] > upper_thresh[lat,lon]):
-                    onon_count = onon_count + np.sum(np.where(precip.data[t,lat-1:lat+2,lon-1:lon+2] > upper_thresh[lat,lon],1,0))
-                    onoff_count = onoff_count + np.sum(np.where(precip.data[t,lat-1:lat+2,lon-1:lon+2] < lower_thresh[lat,lon],1,0))
+                if (my_precip[t,lat,lon] > upper_thresh[lat,lon]):
+                    onon_count = onon_count + np.sum(np.where(my_precip[t,lat-1:lat+2,lon-1:lon+2] > upper_thresh[lat,lon],1,0))
+                    onoff_count = onoff_count + np.sum(np.where(my_precip[t,lat-1:lat+2,lon-1:lon+2] < lower_thresh[lat,lon],1,0))
                     non=non+1
-                if (precip.data[t,lat,lon] < lower_thresh[lat,lon] and precip.data[t,lat,lon] > 1):
-                    offoff_count = offoff_count + np.sum(np.where(precip.data[t,lat-1:lat+2,lon-1:lon+2] < lower_thresh[lat,lon],1,0))
-                    offon_count = offon_count + np.sum(np.where(precip.data[t,lat-1:lat+2,lon-1:lon+2] > upper_thresh[lat,lon],1,0))
+                if (my_precip[t,lat,lon] < lower_thresh[lat,lon] and my_precip[t,lat,lon] > 1):
+                    offoff_count = offoff_count + np.sum(np.where(my_precip[t,lat-1:lat+2,lon-1:lon+2] < lower_thresh[lat,lon],1,0))
+                    offon_count = offon_count + np.sum(np.where(my_precip[t,lat-1:lat+2,lon-1:lon+2] > upper_thresh[lat,lon],1,0))
                     noff=noff+1
+            if twod:
+                if non > 0 and noff > 0:
+                    onon_count = onon_count / float(non*8.0)
+                    onoff_count = onoff_count / float(non*8.0)
+                    offoff_count = offoff_count / float(noff*8.0)
+                    offon_count = offon_count / float(noff*8.0)
+                    space_inter.data[lat,lon] = 0.5*((onon_count+offoff_count)-(onoff_count+offon_count))
+                else:
+                    space_inter.data[lat,lon] = -999 # Are these places where it rarely ever rains?
+                non=0
+                noff=0
+                onon_count=0
+                onoff_count=0
+                offon_count=0
+                offoff_count=0
 
-    onon_count = onon_count / float(non*8.0)
-    onoff_count = onoff_count / float(non*8.0)
-    offoff_count = offoff_count / float(noff*8.0)
-    offon_count = offon_count / float(noff*8.0)
-    space_inter = 0.5*((onon_count+offoff_count)-(onoff_count+offon_count))
-    print '-----> Info: Spatial intermittency measure p(upper|upper): ',onon_count
-    print '-----> Info: Spatial intermittency measure p(lower|lower): ',offoff_count
-    print '-----> Info: Spatial intermittency measure p(upper|lower): ',offon_count
-    print '-----> Info: Spatial intermittency measure p(lower|upper): ',onoff_count
-    print '----> Info: Combined spatial intermittency measure: ',space_inter
+
+    if twod:
+        print '----> Info: Computed spatial intermittency metrics as 2D array.'
+        #print len(xrange(1,nlat,3)),len(xrange(1,nlon,3)),np.shape(space_inter_calc),np.shape(space_inter)
+        #f = interpolate.interp2d(xrange(1,nlat-1,3),xrange(1,nlon-1,3),space_inter_calc,fill_value=np.nan,bounds_error=False)
+        #space_inter = f(np.arange(nlat),np.arange(nlon))
+        #print space_inter_calc
+        #print space_inter
+        space_inter.data[0,:]=-999
+        space_inter.data[nlat-1,:]=-999
+        if not cyclic_lon:
+            space_inter.data[:,0]=-999
+            space_inter.data[:,nlon-1]=-999
+    else:
+        onon_count = onon_count / float(non*8.0)
+        onoff_count = onoff_count / float(non*8.0)
+        offoff_count = offoff_count / float(noff*8.0)
+        offon_count = offon_count / float(noff*8.0)
+        space_inter = 0.5*((onon_count+offoff_count)-(onoff_count+offon_count))
+        print '-----> Info: Spatial intermittency measure p(upper|upper): ',onon_count
+        print '-----> Info: Spatial intermittency measure p(lower|lower): ',offoff_count
+        print '-----> Info: Spatial intermittency measure p(upper|lower): ',offon_count
+        print '-----> Info: Spatial intermittency measure p(lower|upper): ',onoff_count
+        print '----> Info: Combined spatial intermittency measure: ',space_inter
+
+    space_inter.data = np.ma.masked_less(space_inter.data,-1)
+    time_inter.data = np.ma.masked_less(time_inter.data,-1)
 
     return (space_inter,time_inter)
+
+def plot_spacetime_summary_maps(metric,lat,lon,metric_type,model_dict,levels=None,cscale=None):
+
+    print '--> Plotting spacetime summary maps'
+    cfp.setvars(file='asop_coherence.'+model_dict['name']+'_precip_'+metric_type+'_metric.ps',text_fontsize=20,axis_label_fontsize=20)
+    cfp.gopen()
+    cfp.mapset(latmin=model_dict['region'][0],latmax=model_dict['region'][1],lonmin=model_dict['region'][2],lonmax=model_dict['region'][3])
+    if levels is None:
+        levels=[-0.15,-0.05,0.05,0.15,0.25,0.35,0.45,0.55,0.65,0.75,0.85,0.95]
+    cfp.levs(manual=np.asarray(levels))
+    if cscale is None:
+        cscale='hotcold_18lev'
+    cfp.cscale(cscale,ncols=len(levels)+1,below=2,above=11,uniform=True)
+    cfp.con(x=lon,y=lat,f=metric.data,lines=False,line_labels=False,ptype=1,blockfill=1,
+            title=metric_type+' intermittency metric for '+model_dict['legend_name']+' at '+model_dict['grid_desc']+' and '+model_dict['time_desc']+' resolution',
+            colorbar_title='<--- more intermittent in '+metric_type+'          more peristent in '+metric_type+' --->')
+    cfp.gclose()
+
 
 def plot_equalarea_corr(distance_correlations,distance_ranges,distance_max,model_dict=None,colors=None,legend_names=None,set_desc=None,legend=True,legend_location='lower left'):
 
