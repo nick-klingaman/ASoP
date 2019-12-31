@@ -23,6 +23,7 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import BoundaryNorm
 from matplotlib.ticker import MaxNLocator
 from scipy import interpolate
+from six.moves import range
 
 def default_options():
 
@@ -167,7 +168,7 @@ def plot_histogram(oned_hist,twod_hist,model_dict,bins,title=True,colorbar=True)
     ax.set_xlabel('Precipitation at time t (mm day$^{-1}$)',fontsize=18)
     ax.set_ylabel('Precipitation at time t+1 (mm day$^{-1}$)',fontsize=18)
     ticklabels=['< '+str(bins[1])]
-    for bin in xrange(1,nbins):
+    for bin in range(1,nbins):
         ticklabels.append(str(bins[bin]))
     ticklabels.append(' > '+str(bins[nbins-1]))
     ax.set_xticks(np.arange(nbins+1))
@@ -263,17 +264,17 @@ def compute_equalgrid_corr(precip,model_dict):
     corr_map=np.zeros((lag_length,region_size,region_size))
     lag_vs_distance=np.zeros((lag_length,region_size))
     autocorr=np.zeros((lag_length))
-    for region_xstart in xrange(0,nlon-region_size+1,region_size):
+    for region_xstart in range(0,nlon-region_size+1,region_size):
         region_xcentre = region_xstart+region_size//2
-        for region_ystart in xrange(0,nlat-region_size+1,region_size):
+        for region_ystart in range(0,nlat-region_size+1,region_size):
             region_ycentre = region_ystart+region_size//2
             central_precip = precip[:,region_ycentre,region_xcentre]
-            for region_x in xrange(region_size):
+            for region_x in range(region_size):
                 distance_x[region_x]=np.abs(region_xstart+region_x-region_xcentre)
-            for region_y in xrange(region_size):
+            for region_y in range(region_size):
                 distance_y[region_y]=np.abs(region_ystart+region_y-region_ycentre)*model_dict['dy']/float(model_dict['dx'])
-            for region_x in xrange(region_size):
-                for region_y in xrange(region_size):
+            for region_x in range(region_size):
+                for region_y in range(region_size):
                     distance=np.int(round(np.sqrt(distance_x[region_x]*distance_x[region_x]+distance_y[region_y]*distance_y[region_y])))-1
                     remote_precip=precip[:,region_y+region_ystart,region_x+region_xstart]
                     corr = np.corrcoef([central_precip.data,remote_precip.data])[1,0]
@@ -282,7 +283,7 @@ def compute_equalgrid_corr(precip,model_dict):
                         npts_map[0,region_y,region_x]=npts_map[0,region_y,region_x]+1
                     if (region_x + region_xstart == region_xcentre) and (region_y + region_ystart == region_ycentre):
                         autocorr[0]=autocorr[0]+1
-                        for lag in xrange(1,lag_length):
+                        for lag in range(1,lag_length):
                             corr = np.corrcoef(central_precip.data,np.roll(central_precip.data,lag,0))[1,0]
                             if not np.isnan(corr):
                                 corr_map[lag,region_y,region_x]=corr+corr_map[lag,region_y,region_x]
@@ -293,7 +294,7 @@ def compute_equalgrid_corr(precip,model_dict):
                         if not np.isnan(corr):
                             lag_vs_distance[0,distance]=lag_vs_distance[0,distance]+corr
                             npts[0,distance]=npts[0,distance]+1
-                        for lag in xrange(1,lag_length):
+                        for lag in range(1,lag_length):
                             corr = np.corrcoef([central_precip.data,np.roll(remote_precip.data,lag,0)])[1,0]
                             if not np.isnan(corr):
                                 corr_map[lag,region_y,region_x] = corr+corr_map[lag,region_y,region_x]
@@ -303,8 +304,8 @@ def compute_equalgrid_corr(precip,model_dict):
             nregions = nregions+1
     corr_map = corr_map/npts_map
     print('----> Info: There are '+str(nregions)+' '+str(region_size)+'x'+str(region_size)+' sub-regions in your input data.')
-    for lag in xrange(lag_length):
-        for dist in xrange(region_size):
+    for lag in range(lag_length):
+        for dist in range(region_size):
             if npts[lag,dist] > 0:
                 lag_vs_distance[lag,dist]=lag_vs_distance[lag,dist]/npts[lag,dist]
             # If there are no gridpoints in range, set correlation to a missing value
@@ -363,7 +364,7 @@ def plot_equalgrid_corr(corr_map,lag_vs_distance,autocorr,npts,model_dict,title=
     corr_con_levs=[0.05,0.15,0.25,0.35,0.45,0.55,0.65,0.75,0.85,0.95]
 
     # Plot correlation maps at each lag
-    for lag in xrange(lag_length):
+    for lag in range(lag_length):
         plot_name='asop_coherence.'+model_dict['name']
         if 'grid_type' in model_dict:
             plot_name=plot_name+'_'+model_dict['grid_type']
@@ -400,8 +401,8 @@ def plot_equalgrid_corr(corr_map,lag_vs_distance,autocorr,npts,model_dict,title=
         else:
             cfp.con(f=corr_map[lag,:,:],x=np.arange(region_size)+0.5,y=np.arange(region_size)+0.5,blockfill=1,
                     lines=False,line_labels=False,ptype=0,colorbar=0,title=title_string)
-        for region_x in xrange(region_size):
-            for region_y in xrange(region_size):
+        for region_x in range(region_size):
+            for region_y in range(region_size):
                 if corr_map[lag,region_y,region_x] > 0.5:
                     cfp.plotvars.plot.text(region_x+0.5,region_y+0.5,str(corr_map[lag,region_y,region_x])[0:4],
                                            horizontalalignment='center',color='white',fontsize=20)
@@ -427,7 +428,7 @@ def plot_equalgrid_corr(corr_map,lag_vs_distance,autocorr,npts,model_dict,title=
     cfp.gopen(figsize=[9,8])
     ticklabels=['Centre','0.5']
     max_dist=0
-    for dist in xrange(2,region_size):
+    for dist in range(2,region_size):
         if npts[0,dist] > 0 :
             ticklabels.append(str(dist-0.5))
             max_dist=dist
@@ -461,8 +462,8 @@ def plot_equalgrid_corr(corr_map,lag_vs_distance,autocorr,npts,model_dict,title=
         cfp.con(f=lag_vs_distance[:,0:max_dist+2],x=np.arange(max_dist+2)+0.5,y=np.arange(lag_length)+0.5,blockfill=1,
                 lines=False,line_labels=False,ptype=0,colorbar=0,title=title_string)
 
-    for dist in xrange(max_dist+2):
-        for lag in xrange(lag_length):
+    for dist in range(max_dist+2):
+        for lag in range(lag_length):
             if lag_vs_distance[lag,dist] == -999:
                 print('-999')
             #                cfp.plotvars.plot.text(dist+0.5,lag+0.5,'XXX',horizontalalignment='center',color='black',fontsize=20,verticalalignment='center')
@@ -535,17 +536,17 @@ def compute_equalarea_corr(precip,model_dict):
     distance_correlations = np.zeros((max_box_distance))
 
     print('----> Info: Sub-boxes are '+str(box_length_x)+'x'+str(box_length_y)+' gridboxes in this model (nx x ny).')
-    for box_xstart in xrange(0,nlon+1-box_length_x,box_length_x):
+    for box_xstart in range(0,nlon+1-box_length_x,box_length_x):
         box_xcentre = box_xstart+box_length_x//2
-        for box_ystart in xrange(0,nlat+1-box_length_y,box_length_y):
+        for box_ystart in range(0,nlat+1-box_length_y,box_length_y):
             box_ycentre = box_ystart+box_length_y//2
             central_precip = precip[:,box_ycentre,box_xcentre]
-            for box_x in xrange(box_length_x):
+            for box_x in range(box_length_x):
                 distance_x[box_x]=np.abs(box_xstart+box_x-box_xcentre)*np.cos(latitude[box_ycentre]*np.pi/180.)
-            for box_y in xrange(box_length_y):
+            for box_y in range(box_length_y):
                 distance_y[box_y]=np.abs(box_ystart+box_y-box_ycentre)*model_dict['dy']/float(model_dict['dx'])
-            for box_x in xrange(box_length_x):
-                for box_y in xrange(box_length_y):
+            for box_x in range(box_length_x):
+                for box_y in range(box_length_y):
                     distance=np.int(round(np.sqrt(distance_x[box_x]*distance_x[box_x]+distance_y[box_y]*distance_y[box_y])))
                     km_distance=np.sqrt(distance_x[box_x]*distance_x[box_x]+distance_y[box_y]*distance_y[box_y])*model_dict['dx']
                     distance_lists[distance,npts[distance]]=km_distance
@@ -559,7 +560,7 @@ def compute_equalarea_corr(precip,model_dict):
             nboxes = nboxes+1
             if nboxes >= max_boxes :
                 raise Exception('ERROR: Number of sub-boxes ('+str(nboxes)+') exceeds maximum number of sub-boxes ('+str(max_boxes)+') exceeded.  Increase size of sub-boxes (-b option) or increase parameter max_boxes in code.')
-    for dist in xrange(max_box_distance):
+    for dist in range(max_box_distance):
         if npts[dist] > 0 :
             distance_correlations[dist]=distance_correlations[dist]/npts[dist]
             distance_ranges[0,dist]=np.amin(distance_lists[dist,0:npts[dist]])
@@ -604,9 +605,9 @@ def compute_autocorr(precip,model_dict):
     if autocorr_nt > max_timesteps:
         raise Exception('Error: Number of lags for auto-correlation exceeds maximum ('+str(max_timesteps)+').  Increase parameter max_timesteps in code or reduce autocorrelation length.')
 
-    for lon in xrange(nlon):
-        for lat in xrange(nlat):
-            for lag in xrange(autocorr_nt):
+    for lon in range(nlon):
+        for lat in range(nlat):
+            for lag in range(autocorr_nt):
                 this_precip = precip.data[:,lat,lon]
                 time_correlations[lag] = time_correlations[lag] + np.corrcoef(this_precip,np.roll(this_precip,lag,0))[1,0]
 
@@ -625,7 +626,7 @@ def plot_spacetime_summary_regions(metric,regions,datasets,colors,symbols,metric
     if ymax is None:
         ymax=1.0
     cfp.gset(xmin=0,xmax=n_regions,ymin=ymin,ymax=ymax)
-    for j in xrange(n_datasets):
+    for j in range(n_datasets):
         cfp.lineplot(x=np.arange(n_regions)+0.5,y=metric[j,:],lines=False,line_labels=False,marker=symbols[j],color=colors[j],label=datasets[j],markersize=10.0,linewidth=0.0)
     cfp.lineplot(x=0,y=0,lines=False,line_labels=False,legend_location='best',xlabel='Region',ylabel='Average '+metric_type+' metric',xticks=np.arange(n_regions)+0.5,xticklabels=regions,yticks=np.round(np.arange(ymin,ymax,0.1),1))
     cfp.gclose()
@@ -702,8 +703,8 @@ def compute_spacetime_summary(precip,ndivs,twod=False,cyclic_lon=False):
 
     lower_thresh = np.empty((nlat,nlon))
     upper_thresh = np.empty((nlat,nlon))
-    for lon in xrange(nlon):
-        for lat in xrange(nlat):
+    for lon in range(nlon):
+        for lat in range(nlat):
             this_precip = precip.data[:,lat,lon]
             this_precip = this_precip[np.where(this_precip > 1)]
             nt = np.size(this_precip)
@@ -728,11 +729,11 @@ def compute_spacetime_summary(precip,ndivs,twod=False,cyclic_lon=False):
     offoff_count=0
     non=0
     noff=0
-    for lon in xrange(nlon):
-        for lat in xrange(nlat):
+    for lon in range(nlon):
+        for lat in range(nlat):
             this_precip = precip.data[:,lat,lon]
             nt = np.size(this_precip)
-            for t in xrange(nt-1):
+            for t in range(nt-1):
                 if this_precip[t] > 1:
                     if (this_precip[t] > upper_thresh[lat,lon]):
                         non=non+1
@@ -782,10 +783,10 @@ def compute_spacetime_summary(precip,ndivs,twod=False,cyclic_lon=False):
         my_precip[:,:,1:nlon+1]= precip.data[:,:,:]
         my_precip[:,:,0] = precip.data[:,:,nlon-1]
         my_precip[:,:,nlon+1]=precip.data[:,:,0]
-        lon_range=xrange(nlon)
+        lon_range=range(nlon)
     else:
         my_precip = precip.data
-        lon_range=xrange(1,nlon-1)
+        lon_range=range(1,nlon-1)
 
     onon_count=0
     onoff_count=0
@@ -794,8 +795,8 @@ def compute_spacetime_summary(precip,ndivs,twod=False,cyclic_lon=False):
     non=0
     noff=0
     for lon in lon_range:
-        for lat in xrange(1,nlat-1):
-            for t in xrange(nt-1):
+        for lat in range(1,nlat-1):
+            for t in range(nt-1):
                 if (my_precip[t,lat,lon] > upper_thresh[lat,lon]):
                     onon_count = onon_count + np.sum(np.where(my_precip[t,lat-1:lat+2,lon-1:lon+2] > upper_thresh[lat,lon],1,0))
                     onoff_count = onoff_count + np.sum(np.where(my_precip[t,lat-1:lat+2,lon-1:lon+2] < lower_thresh[lat,lon],1,0))
@@ -823,8 +824,8 @@ def compute_spacetime_summary(precip,ndivs,twod=False,cyclic_lon=False):
 
     if twod:
         print('----> Info: Computed spatial intermittency metrics as 2D array.')
-        #print(len(xrange(1,nlat,3)),len(xrange(1,nlon,3)),np.shape(space_inter_calc),np.shape(space_inter)
-        #f = interpolate.interp2d(xrange(1,nlat-1,3),xrange(1,nlon-1,3),space_inter_calc,fill_value=np.nan,bounds_error=False)
+        #print(len(range(1,nlat,3)),len(range(1,nlon,3)),np.shape(space_inter_calc),np.shape(space_inter)
+        #f = interpolate.interp2d(range(1,nlat-1,3),range(1,nlon-1,3),space_inter_calc,fill_value=np.nan,bounds_error=False)
         #space_inter = f(np.arange(nlat),np.arange(nlon))
         #print(space_inter_calc
         #print(space_inter
@@ -945,7 +946,7 @@ def plot_equalarea_corr(distance_correlations,distance_ranges,distance_max,model
         print(dmax)
         xmax=dmax*1.05
         cfp.gset(xmin=0,xmax=xmax,ymin=-0.5,ymax=1.0)
-        for model in xrange(nmodels):
+        for model in range(nmodels):
             xpts=distance_ranges[model,1,1:distance_max[model]].flatten()
             ypts=distance_correlations[model,1:distance_max[model]].flatten()
             print(xpts,ypts)
@@ -953,7 +954,7 @@ def plot_equalarea_corr(distance_correlations,distance_ranges,distance_max,model
                 cfp.lineplot(x=xpts,y=ypts,linestyle=':',marker='o',color=colors[model],markersize=8,label=legend_names[model],legend_location=legend_location,xticks=np.arange(0,dmax+1,dmax//10),yticks=np.round(np.arange(12)*0.1-0.1,1))
             else:
                 cfp.lineplot(x=xpts,y=ypts,linestyle=':',marker='o',color=colors[model],markersize=8,label=legend_names[model],xticks=np.arange(0,dmax+1,dmax//10),yticks=np.round(np.arange(12)*0.1-0.1,1))
-            for dist in xrange(1,distance_max[model]):
+            for dist in range(1,distance_max[model]):
                 xpts=[distance_ranges[model,0,dist],distance_ranges[model,2,dist]]
                 ypts=[distance_correlations[model,dist],distance_correlations[model,dist]]
                 cfp.plotvars.plot.plot(xpts,ypts,linewidth=2,color=colors[model])
@@ -969,7 +970,7 @@ def plot_equalarea_corr(distance_correlations,distance_ranges,distance_max,model
         else:
             cfp.lineplot(x=xpts,y=ypts,linestyle=':',marker='o',color=colors,markersize=8,label=legend_names,legend_location=legend_location,
                          xticks=np.arange(0,dmax+1,dmax//10),yticks=np.round(np.arange(12)*0.1-0.1,1))
-        for dist in xrange(1,distance_max):
+        for dist in range(1,distance_max):
             xpts=[distance_ranges[0,dist],distance_ranges[2,dist]]
             ypts=[distance_correlations[dist],distance_correlations[dist]]
             cfp.plotvars.plot.plot(xpts,ypts,linewidth=2,color=colors)
@@ -1065,7 +1066,7 @@ def plot_autocorr(time_correlations,time_max,dt=None,model_dict=None,colors=None
     cfp.gset(xmin=0,xmax=xmax,ymin=-0.5,ymax=1.0)
 
     if time_correlations.ndim == 2:
-        for model in xrange(nmodels):
+        for model in range(nmodels):
             xpts=(np.arange(time_max[model]))*dt_min[model]
             ypts=time_correlations[model,0:time_max[model]]
             print(xpts,ypts)
