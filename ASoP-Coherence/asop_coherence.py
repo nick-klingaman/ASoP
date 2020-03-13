@@ -652,7 +652,8 @@ def average_spacetime_summary(metric,region,mask=None):
 
     return metric_avg
 
-def compute_spacetime_summary(precip,ndivs,twod=False,cyclic_lon=False):
+def compute_spacetime_summary(precip,ndivs,twod=False,cyclic_lon=False,min_precip_threshold=1):
+    from tqdm import tqdm
 
     """
     Computes summary metrics of spatial and temporal coherence,
@@ -703,18 +704,19 @@ def compute_spacetime_summary(precip,ndivs,twod=False,cyclic_lon=False):
 
     lower_thresh = np.empty((nlat,nlon))
     upper_thresh = np.empty((nlat,nlon))
-    for lon in range(nlon):
-        for lat in range(nlat):
-            this_precip = precip.data[:,lat,lon]
-            this_precip = this_precip[np.where(this_precip > 1)]
-            nt = np.size(this_precip)
-            if nt > ndivs:
-                precip_sorted = np.sort(this_precip)
-                lower_thresh[lat,lon] = precip_sorted[np.int(np.floor(nt/ndivs))]
-                upper_thresh[lat,lon] = precip_sorted[np.int(np.floor(nt*(ndivs-1)/float(ndivs)))]
-            else:
-                lower_thresh[lat,lon] = 0
-                upper_thresh[lat,lon] = 0
+    # Use cube slices to avoid loading all data into memory
+    for t,t_slice in tqdm(enumerate(precip.slices(['time']))):
+        lat = t // nlon
+        lon = t % nlon
+        this_precip = t_slice.data
+        this_precip = this_precip[np.where(this_precip > min_precip_threshold)]
+        nt = np.size(this_precip)
+        if nt > ndivs:
+            lower_thresh[lat,lon] = np.percentile(this_precip,25)
+            upper_thresh[lat,lon] = np.percentile(this_precip,75)
+        else:
+            lower_thresh[lat,lon] = 0
+            upper_thresh[lat,lon] = 0
 
 
     if twod:
@@ -734,7 +736,7 @@ def compute_spacetime_summary(precip,ndivs,twod=False,cyclic_lon=False):
             this_precip = precip.data[:,lat,lon]
             nt = np.size(this_precip)
             for t in range(nt-1):
-                if this_precip[t] > 1:
+                if this_precip[t] > min_precip_threshold:
                     if (this_precip[t] > upper_thresh[lat,lon]):
                         non=non+1
                         if (this_precip[t+1] < lower_thresh[lat,lon]):
