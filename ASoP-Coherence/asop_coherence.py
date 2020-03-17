@@ -652,6 +652,73 @@ def average_spacetime_summary(metric,region,mask=None):
 
     return metric_avg
 
+def compute_temporal_summary(precip,ndivs,twod=False,cyclic_lon=False,min_precip_threshold=1):
+    # Compute temporal summary metric only
+    
+    lon_coord = precip.coord('longitude')
+    lat_coord = precip.coord('latitude')
+    nlon = len(lon_coord.points)
+    nlat = len(lat_coord.points)
+    lower_thresh = iris.cube.Cube(data=np.empty((nlat,nlon)),dim_coords_and_dims=[(lat_coord,0),(lon_coord,1)])
+    upper_thresh = lower_thresh.copy()
+    if twod:
+        time_inter = lower_thresh.copy()
+
+    # Use cube slices to avoid loading all data into memory
+    for t,t_slice in tqdm(enumerate(precip.slices(['time']))):
+        lat = t // nlon
+        lon = t % nlon
+        this_precip = t_slice.data
+        this_precip = this_precip[np.where(this_precip > min_precip_threshold)]
+        nt = np.size(this_precip)
+        if nt > ndivs:
+            lower_thresh[lat,lon] = t_slice.collapsed('time',iris.analysis.PERCENTILE,percent=25)
+            upper_thresh[lat,lon] = t_slice.collapsed('time',iris.analysis.PERCENTILE,percent=75)
+        else:
+            lower_thresh[lat,lon] = 0
+            upper_thresh[lat,lon] = 0
+
+    onon_count=0
+    onoff_count=0
+    offon_count=0
+    offoff_count=0
+    non=0
+    noff=0
+    for lon in range(nlon):
+        for lat in range(nlat):
+            this_precip = precip.data[:,lat,lon]
+            nt = np.size(this_precip)
+            for t in range(nt-1):
+                if this_precip[t] > min_precip_threshold:
+                    if (this_precip[t] > upper_thresh[lat,lon]):
+                        non=non+1
+                        if (this_precip[t+1] < lower_thresh[lat,lon]):
+                            onoff_count=onoff_count+1
+                        elif (this_precip[t+1] > upper_thresh[lat,lon]):
+                            onon_count=onon_count+1
+                    elif (this_precip[t] < lower_thresh[lat,lon]):
+                        noff=noff+1
+                        if (this_precip[t+1] < lower_thresh[lat,lon]):
+                            offoff_count=offoff_count+1
+                        elif (this_precip[t+1] > upper_thresh[lat,lon]):
+                            offon_count=offon_count+1
+            if twod:
+                if non > 0 and noff > 0:
+                    onon_count = onon_count/float(non)
+                    onoff_count = onoff_count/float(non)
+                    offoff_count = offoff_count/float(noff)
+                    offon_count = offon_count/float(noff)
+                    time_inter.data[lat,lon] = 0.5*((onon_count+offoff_count)-(onoff_count+offon_count))
+                else:
+                    time_inter.data[lat,lon] = -999 # Are these places where it rarely ever rains?
+                non=0
+                noff=0
+                onon_count=0
+                onoff_count=0
+                offon_count=0
+                offoff_count=0
+    
+
 def compute_spacetime_summary(precip,ndivs,twod=False,cyclic_lon=False,min_precip_threshold=1):
     from tqdm import tqdm
 
