@@ -269,7 +269,7 @@ if __name__ == '__main__':
         ([-90,90,0,360],'land','glob_land'),
         ([-90,90,0,360],'ocean','glob_ocean')
     ]
-    datasets=['AWI','GPM_IMERG']
+    datasets=['GPM_IMERG']
     n_datasets=len(datasets)
     n_regions = len(regions)
     space_metrics_plot = np.empty((n_datasets,n_regions))
@@ -283,7 +283,7 @@ if __name__ == '__main__':
     wet_season_threshold = 1.0/24.0
     wet_season_threshold_str='1d24'
 
-    masked_overwrite=False
+    masked_overwrite=True
     for model in datasets:
         print('--> '+model)
         asop_dict = get_asop_dict(model)

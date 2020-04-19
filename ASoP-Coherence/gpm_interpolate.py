@@ -45,6 +45,7 @@ while dt_date < dt.datetime(year=year+1,month=1,day=1):
         iris.save(out_cube,outfile_3hr,unlimited_dimensions='time',zlib=True)
     else:
         out_cube = iris.load_cube(outfile_3hr)
+        out_cube.coord('longitude').circular = True
     if not os.path.exists(outfile_3hr_3x3) and not overwrite_3x3:
         print('Interpolating 3hr means to 3x3 for '+date)
         interp_lon = iris.coords.DimCoord(np.arange(1.5,360,3),standard_name='longitude',units='degrees_east',circular=True)
