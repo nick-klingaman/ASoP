@@ -23,7 +23,7 @@ while dt_date < dt.datetime(year=year+1,month=1,day=1):
     date = dt_date.strftime('%Y%m%d')
     outfile_3hr = basedir+'/3B-HHR.MS.MRG.3IMERG.'+date+'.3hr_means.V06B.nc'
     outfile_3hr_3x3 = basedir+'/3B-HHR.MS.MRG.3IMERG.'+date+'.3hr_means_3x3.V06B.nc'
-    if not os.path.exists(outfile_3hr) and not overwrite_3hr:
+    if not os.path.exists(outfile_3hr) or overwrite_3hr:
         print('Creating 3hr means for '+date)
         cubes = iris.load(basedir+'/3B*.'+date+'-S*-E*.*.V06B.nc')
         equalise_attributes(cubes)
@@ -46,7 +46,7 @@ while dt_date < dt.datetime(year=year+1,month=1,day=1):
     else:
         out_cube = iris.load_cube(outfile_3hr)
         out_cube.coord('longitude').circular = True
-    if not os.path.exists(outfile_3hr_3x3) and not overwrite_3x3:
+    if not os.path.exists(outfile_3hr_3x3) or overwrite_3x3:
         print('Interpolating 3hr means to 3x3 for '+date)
         interp_lon = iris.coords.DimCoord(np.arange(1.5,360,3),standard_name='longitude',units='degrees_east',circular=True)
         nlon = len(interp_lon.points)

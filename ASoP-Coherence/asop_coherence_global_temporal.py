@@ -1,6 +1,3 @@
-import sys
-sys.path.append('/home/nick/python/asop_global/ASoP-Coherence')
-import asop_coherence as asop
 import iris
 from pathlib import Path
 import numpy as np
@@ -28,8 +25,8 @@ def load_cmip6(asop_dict):
     return(out_cube)
 
 def get_asop_dict(key):
-    cmip6_path=Path('/media/nick/data/CMIP6')
-    obs_path=Path('/media/nick/data')
+    cmip6_path=Path('/media/nick/lacie_tb3/data_from_gill/CMIP6')
+    obs_path=Path('/media/nick/lacie_tb3')
     if key == 'AWI':
         asop_dict={
             'desc': 'AWI-CM-1-1-MR_historical_r1i1p1f1_gn',
@@ -131,6 +128,8 @@ def compute_temporal_autocorr(precip,max_lag):
 
     temporal_autocorr = iris.cube.Cube(data=np.empty((nmonths,max_lag,nlat,nlon)),dim_coords_and_dims=[(month_coord,0),(lag_coord,1),(lat_coord,2),(lon_coord,3)])
     temporal_autocorr = temporal_autocorr.copy(data=temporal_autocorr.data.fill(np.nan)) #temporal_autocorr.data[:,:,:,:].fill(np.nan)
+    temporal_autocorr.var_name='autocorr_wetseason_precip'
+    temporal_autocorr.long_name='Auto-correlation of precipitation masked for the wet season'
     for m,month in enumerate(months):
         dask_autocorr = []
         print('-->-->--> Month '+str(month))
@@ -149,6 +148,8 @@ def compute_temporal_autocorr(precip,max_lag):
         result[np.where(result == 0.0)] = np.nan
         temporal_autocorr.data[m,:,:,:] = np.nanmean(result[:,:,:,:],axis=0)
     temporal_autocorr_mean = temporal_autocorr.collapsed('month_number',iris.analysis.MEAN,mdtol=0)
+    temporal_autocorr_mean.var_name='autocorr_wetseason_precip_mean'
+    temporal_autocorr_mean.long_name='Auto-correlation of precipitation masked for the wet season (mean of all months in wet season)'
     temporal_autocorr_mean.data = np.nanmean(temporal_autocorr.data,axis=0)
     out_cubelist = [temporal_autocorr,temporal_autocorr_mean]
     return(out_cubelist)
@@ -269,7 +270,7 @@ if __name__ == '__main__':
         ([-90,90,0,360],'land','glob_land'),
         ([-90,90,0,360],'ocean','glob_ocean')
     ]
-    datasets=['GPM_IMERG']
+    datasets=['AWI','GPM_IMERG']
     n_datasets=len(datasets)
     n_regions = len(regions)
     space_metrics_plot = np.empty((n_datasets,n_regions))
@@ -300,6 +301,8 @@ if __name__ == '__main__':
             precip = load_cmip6(asop_dict)
             print('-->--> Masking precipitation for wet season')
             masked_precip = mask_wet_season(precip)
+            masked_precip.var_name='precipitation_flux_masked'
+            masked_precip.long_name='Masked precipitation for wet season (threshold '+wet_season_threshold_str+' of annual total)'
             with dask.config.set(scheduler='synchronous'):
                 iris.save(masked_precip,masked_precip_file)
         print('-->--> Computing temporal autocorrelation metrics')
