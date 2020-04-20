@@ -26,7 +26,7 @@ def load_cmip6(asop_dict):
 
 def get_asop_dict(key):
     cmip6_path=Path('/media/nick/lacie_tb3/data_from_gill/CMIP6')
-    obs_path=Path('/media/nick/lacie_tb3')
+    obs_path=Path('/media/nick/lacie_tb3/datasets')
     if key == 'AWI':
         asop_dict={
             'desc': 'AWI-CM-1-1-MR_historical_r1i1p1f1_gn',
@@ -270,7 +270,7 @@ if __name__ == '__main__':
         ([-90,90,0,360],'land','glob_land'),
         ([-90,90,0,360],'ocean','glob_ocean')
     ]
-    datasets=['AWI','GPM_IMERG']
+    datasets=['GPM_IMERG','AWI']
     n_datasets=len(datasets)
     n_regions = len(regions)
     space_metrics_plot = np.empty((n_datasets,n_regions))
