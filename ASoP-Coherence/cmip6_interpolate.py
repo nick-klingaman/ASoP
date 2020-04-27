@@ -23,11 +23,78 @@ def get_asop_dict(key):
         asop_dict={
             'dir': datapath/'BCC-CSM2-MR',
             'name': 'BCC',
+            'desc': 'BCC-CSM2-MR_historical_r1i1p1f1_gn',
             'dt': 10800,
             'legend_name': 'BCC',
             'region': [-90,90,0,360],
             'color': 'blue',
             'symbol': '8'
+        }
+    elif key == 'ACCESS':
+        asop_dict={
+            'dir': datapath/'ACCESS-CM2',
+            'name': 'ACCESS',
+            'desc': 'ACCESS-CM2_historical_r1i1p1f1_gn',
+            'dt': 10800,
+            'legend_name': 'ACCESS',
+            'region': [-90,90,0,360],
+            'color': 'purple',
+            'symbol': '>'
+        }
+    elif key == 'FGOALS':
+        asop_dict={
+            'dir': datapath/'FGOALS-g3',
+            'name': 'FGOALS',
+            'desc': 'FGOALS-g3_historical_r1i1p1f1_gn',
+            'dt': 10800,
+            'legend_name': 'FGOALS',
+            'region': [-90,90,0,360],
+            'color': 'brown',
+            'symbol': '<'
+        }
+    elif key == 'GISS':
+        asop_dict={
+            'dir': datapath/'GISS-E2-1-G',
+            'name': 'GISS',
+            'desc': 'GISS-E2-1-G_historical_r1i1p1f1_gn',
+            'dt': 10800,
+            'legend_name': 'GISS',
+            'region': [-90,90,0,360],
+            'color': 'brown',
+            'symbol': '<'
+        }
+    elif key == 'MIROC':
+        asop_dict={
+            'dir': datapath/'MIROC6',
+            'name': 'MIROC',
+            'desc': 'MIROC6_historical_r1i1p1f1_gn',
+            'dt': 10800,
+            'legend_name': 'MIROC6',
+            'region': [-90,90,0,360],
+            'color': 'brown',
+            'symbol': '<'
+        }
+    elif key == 'MPI-ESM1':
+        asop_dict={
+            'dir': datapath/'MPI-ESM1-2-HR',
+            'name': 'MPI-ESM',
+            'desc': 'MPI-ESM1-2-HR_historical_r1i1p1f1_gn',
+            'dt': 10800,
+            'legend_name': 'MPI-ESM',
+            'region': [-90,90,0,360],
+            'color': 'brown',
+            'symbol': '<'
+        }
+    elif key == 'SAM0-UNICON':
+        asop_dict={
+            'dir': datapath/'SAM0-UNICON',
+            'name': 'SAM',
+            'desc': 'SAM0-UNICON_historical_r1i1p1f1_gn',
+            'dt': 10800,
+            'legend_name': 'SAM',
+            'region': [-90,90,0,360],
+            'color': 'brown',
+            'symbol': '<'
         }
     else:
         raise Exception('No dictionary for '+key)
@@ -44,15 +111,17 @@ def interp_3x3(cube):
     out_cube = cube.regrid(interp_cube,iris.analysis.AreaWeighted(mdtol=0))
     return(out_cube)
 
-models=['AWI']
+models=['SAM0-UNICON']
 for model in models:
+    print(model)
     asop_dict = get_asop_dict(model)
-    for year in range(asop_dict['start_year'],asop_dict['stop_year']+1):
-        infile = glob.glob(str(asop_dict['dir'])+'/pr_3hr_'+asop_dict['desc']+'*'+str(year)+'*.nc3')
-        for infile in infile:
-            print(infile)
-            cube = iris.load_cube(infile)
-            interp_cube = interp_3x3(cube)
-            outfile = os.path.splitext(infile)[0]+'.3x3.nc'
-            iris.save(interp_cube,outfile)
+    infiles = glob.glob(str(asop_dict['dir'])+'/pr_3hr_'+asop_dict['desc']+'_*0.nc')
+    print(asop_dict['dir'])
+    print(infiles)
+    for infile in infiles:
+        print(infile)
+        cube = iris.load_cube(infile)
+        interp_cube = interp_3x3(cube)
+        outfile = os.path.splitext(infile)[0]+'.3x3.nc'
+        iris.save(interp_cube,outfile)
 #iris.save(out_interp_cube,basedir+'/3B-HHR.MS.MRG.3IMERG.'+date+'.3hr_means_3x3.V06B.nc',unlimited_dimensions=['time'],zlib=True)

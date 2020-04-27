@@ -29,7 +29,7 @@ def get_asop_dict(key):
     obs_path=Path('/media/nick/lacie_tb3/datasets')
     if key == 'AWI':
         asop_dict={
-            'desc': 'AWI-CM-1-1-MR_historical_r1i1p1f1_gn',
+            'desc': 'AWI-CM-1-1-MR_historical_r1i1p1f1_gn_3hr_3x3',
             'dir': cmip6_path/'AWI-CM-1-1-MR',
             'file_pattern': 'pr_3hr*.3x3.nc',
             'name': 'AWI',
@@ -44,9 +44,12 @@ def get_asop_dict(key):
     elif key == 'BCC':
         asop_dict={
             'dir': cmip6_path/'BCC-CSM2-MR',
+            'desc': 'BCC-CSM2-MR_historical_r1i1p1f1_gn_3hr_3x3',
             'name': 'BCC',
             'file_pattern': 'pr_3hr*.3x3.nc',
             'dt': 10800,
+            'start_year': 1980,
+            'stop_year': 2014,
             'legend_name': 'BCC',
             'region': [-90,90,0,360],
             'color': 'blue',
@@ -65,6 +68,90 @@ def get_asop_dict(key):
             'region': [-60,60,0,360],
             'color': 'black',
             'symbol': '>'
+        }
+    elif key == 'ACCESS':
+        asop_dict={
+            'desc': 'ACCESS-CM2_historical_r1i1p1f1_gn_3hr_3x3',
+            'dir': cmip6_path/'ACCESS-CM2',
+            'name': 'ACCESS',
+            'file_pattern': 'pr_3hr*.3x3.nc',
+            'dt': 10800,
+            'start_year': 1990,
+            'stop_year': 2014,
+            'legend_name': 'ACCESS',
+            'region': [-90,90,0,360],
+            'color': 'purple',
+            'symbol': '>'
+        }
+    elif key == 'FGOALS':
+        asop_dict={
+            'desc': 'FGOALS-g3_historical_r1i1p1f1_gn_3hr_3x3',
+            'dir': cmip6_path/'FGOALS-g3',
+            'name': 'FGOALS',
+            'dt': 10800,
+            'file_pattern': 'pr_3hr*.3x3.nc',
+            'start_year': 1990,
+            'stop_year': 2016,
+            'legend_name': 'FGOALS',
+            'region': [-90,90,0,360],
+            'color': 'brown',
+            'symbol': '<'
+        }
+    elif key == 'GISS':
+        asop_dict={
+            'dir': cmip6_path/'GISS-E2-1-G',
+            'name': 'GISS',
+            'desc': 'GISS-E2-1-G_historical_r1i1p1f1_gn_3hr_3x3',
+            'dt': 10800,
+            'file_pattern': 'pr_3hr*.3x3.nc',
+            'start_year': 1990,
+            'stop_year': 2014,
+            'legend_name': 'GISS',
+            'region': [-90,90,0,360],
+            'color': 'brown',
+            'symbol': '<'
+        }
+    elif key == 'MIROC':
+        asop_dict={
+            'dir': cmip6_path/'MIROC6',
+            'name': 'MIROC',
+            'desc': 'MIROC6_historical_r1i1p1f1_gn_3hr_3x3',
+            'dt': 10800,
+            'file_pattern': 'pr_3hr*.3x3.nc',
+            'start_year': 1990,
+            'stop_year': 2014,
+            'legend_name': 'MIROC6',
+            'region': [-90,90,0,360],
+            'color': 'brown',
+            'symbol': '<'
+        }
+    elif key == 'MPI-ESM1':
+        asop_dict={
+            'dir': cmip6_path/'MPI-ESM1-2-HR',
+            'name': 'MPI-ESM',
+            'desc': 'MPI-ESM1-2-HR_historical_r1i1p1f1_gn_3hr_3x3',
+            'dt': 10800,
+            'file_pattern': 'pr_3hr*.3x3.nc',
+            'start_year': 1990,
+            'stop_year': 2014,
+            'legend_name': 'MPI-ESM',
+            'region': [-90,90,0,360],
+            'color': 'brown',
+            'symbol': '<'
+        }
+    elif key == 'SAM0-UNICON':
+        asop_dict={
+            'dir': cmip6_path/'SAM0-UNICON',
+            'name': 'SAM',
+            'desc': 'SAM0-UNICON_historical_r1i1p1f1_gn_3hr_3x3',
+            'dt': 10800,
+            'file_pattern': 'pr_3hr*.3x3.nc',
+            'start_year': 1990,
+            'stop_year': 2014,
+            'legend_name': 'SAM',
+            'region': [-90,90,0,360],
+            'color': 'brown',
+            'symbol': '<'
         }
     else:
         raise Exception('No dictionary for '+key)
@@ -102,6 +189,34 @@ def mask_wet_season(precip,wet_season_threshold=1.0/24.0):
         precip_mask.data[np.where(precip.coord('month_number').points == month)] = month_mask_repeat
     masked_precip = precip.copy(data=(ma.array(precip.data,mask=precip_mask.data)))
     return(masked_precip)
+
+def mask_min_precip(precip,min_precip_threshold=1.0):
+    import numpy.ma as ma
+    from cfunits import Units
+
+    if precip.units == 'mm/hr':
+        input_units = 'mm/h'
+    elif precip.units == 'kg m-2 s-1':
+        input_units = 'mm/s'
+    else:
+        input_units = precip.units
+    threshold_units = Units.conform(min_precip_threshold,Units('mm/day'),Units(input_units)) #precip.units))
+    nt = len(precip.coord('time').points)
+    nlon = len(precip.coord('longitude').points)
+    nlat = len(precip.coord('latitude').points)
+    precip_mask = precip.copy(data=np.empty((nt,nlat,nlon)))
+    precip_mean = precip.collapsed('time',iris.analysis.MEAN)
+    for y in range(nlat):
+        for x in range(nlon):
+            if precip_mean.data[y,x] < threshold_units:
+                precip_mask.data[:,y,x] = 1
+            else:
+                precip_mask.data[:,y,x] = 0
+    masked_precip = precip.copy(data=ma.array(precip.data,mask=precip_mask.data))
+    return(masked_precip)
+
+    print(threshold_units)
+#    ann_mean
 
 def compute_autocorr_grid(precip,lag):
     import iris.analysis.stats as istats
@@ -260,29 +375,13 @@ def compute_onoff_metric_grid(this_monthyear,lower_thresh,upper_thresh):
 
 if __name__ == '__main__':
     client = Client()
-    regions = [ 
-        ([-30,30,0,360],'land','trop_land'),
-        ([-30,30,0,360],'ocean','trop_ocean'),
-        ([-90,-30,0,360],'land','sh_land'),
-        ([-90,-30,0,360],'ocean','sh_ocean'),
-        ([30,90,0,360],'land','nh_land'),
-        ([30,90,0,360],'ocean','nh_ocean'),
-        ([-90,90,0,360],'land','glob_land'),
-        ([-90,90,0,360],'ocean','glob_ocean')
-    ]
-    datasets=['GPM_IMERG','AWI']
+#    datasets=['BCC','GPM_IMERG','AWI']
+    datasets=['ACCESS','FGOALS','GISS','MIROC','MPI-ESM1','SAM0-UNICON']
     n_datasets=len(datasets)
-    n_regions = len(regions)
-    space_metrics_plot = np.empty((n_datasets,n_regions))
-    time_metrics_plot = np.empty((n_datasets,n_regions))
-    all_datasets = []
-    all_colors = []
-    all_symbols = []
-    all_regions = []
-    for box,mask_type,region_name in regions:
-        all_regions.append(region_name)
     wet_season_threshold = 1.0/24.0
     wet_season_threshold_str='1d24'
+    min_precip_threshold = 1.0 # mm/day
+    min_precip_threshold_str='1mmpd'
 
     masked_overwrite=True
     for model in datasets:
@@ -290,12 +389,22 @@ if __name__ == '__main__':
         asop_dict = get_asop_dict(model)
 
         masked_precip_file=str(asop_dict['dir'])+'/'+asop_dict['desc']+'_asop_masked_precip_wetseason'+wet_season_threshold_str+'.nc'
+        masked_min_precip_file=str(asop_dict['dir'])+'/'+asop_dict['desc']+'_asop_masked_precip_wetseason'+wet_season_threshold_str+'_minprecip'+min_precip_threshold_str+'.nc'
         temporal_summary_file=str(asop_dict['dir'])+'/'+str(asop_dict['desc'])+'_asop_temporal_summary_wetseason'+wet_season_threshold_str+'.nc'
         temporal_autocorr_file=str(asop_dict['dir'])+'/'+str(asop_dict['desc'])+'_asop_temporal_autocorr_wetseason'+wet_season_threshold_str+'.nc'
 
-        if os.path.exists(masked_precip_file) and not masked_overwrite:
-            print('-->--> Reading masked precipitation from file')
+        if os.path.exists(masked_min_precip_file) and not masked_overwrite:
+            print('-->--> Reading masked precipitation (by wet season and by min precip) from file')
+            masked_min_precip = iris.load_cube(masked_min_precip_file)
+        elif os.path.exists(masked_precip_file) and not masked_overwrite:
+            print('-->--> Reading masked precipitation (by wet season) from file')
             masked_precip = iris.load_cube(masked_precip_file)
+            print('-->--> Masking precip for minimum rain rate')
+            masked_min_precip = mask_min_precip(masked_precip,min_precip_threshold=min_precip_threshold)
+            masked_min_precip.var_name='precipitation_flux_masked'
+            masked_min_precip.long_name='Masked precipitation for wet season (threshold '+wet_season_threshold_str+' of annual total) and min mean precip (threshold '+min_precip_threshold_str+' mm/day)'
+            with dask.config.set(scheduler='synchronous'):
+                iris.save(masked_min_precip,masked_min_precip_file)
         else:
             print('-->--> Reading precipitation ')
             precip = load_cmip6(asop_dict)
@@ -305,10 +414,16 @@ if __name__ == '__main__':
             masked_precip.long_name='Masked precipitation for wet season (threshold '+wet_season_threshold_str+' of annual total)'
             with dask.config.set(scheduler='synchronous'):
                 iris.save(masked_precip,masked_precip_file)
+            print('-->--> Masking precipitation for minimum rain rate')
+            masked_min_precip = mask_min_precip(masked_precip,min_precip_threshold=min_precip_threshold)
+            masked_min_precip.var_name='precipitation_flux_masked'
+            masked_min_precip.long_name='Masked precipitation for wet season (threshold '+wet_season_threshold_str+' of annual total) and min mean precip (threshold '+min_precip_threshold_str+' mm/day)'
+            with dask.config.set(scheduler='synchronous'):
+                iris.save(masked_min_precip,masked_min_precip_file)
         print('-->--> Computing temporal autocorrelation metrics')
-        temporal_autocorr = compute_temporal_autocorr(masked_precip,17)
+        temporal_autocorr = compute_temporal_autocorr(masked_min_precip,17)
         print('-->--> Computing temporal summary metrics')
-        temporal_summary = compute_temporal_summary(masked_precip,4)
+        temporal_summary = compute_temporal_summary(masked_min_precip,4)
         with dask.config.set(scheduler='synchronous'):
             iris.save(temporal_summary,temporal_summary_file)
             iris.save(temporal_autocorr,temporal_autocorr_file)
