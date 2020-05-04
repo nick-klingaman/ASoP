@@ -111,7 +111,18 @@ def interp_3x3(cube):
     out_cube = cube.regrid(interp_cube,iris.analysis.AreaWeighted(mdtol=0))
     return(out_cube)
 
-models=['SAM0-UNICON']
+def avg_daily(cube):
+    from iris.coord_categorisation import add_day_of_year,add_year
+    add_day_of_year(cube,'time')
+    add_year(cube,'time')
+    print(cube)
+    daily_cube = cube.aggregated_by(['day_of_year','year'],iris.analysis.MEAN)
+    print(daily_cube)
+    return(daily_cube)
+
+models=['BCC','GISS']#,'MPI-ESM1','ACCESS','FGOALS']
+do_daily = True
+do_3x3 = False
 for model in models:
     print(model)
     asop_dict = get_asop_dict(model)
@@ -121,7 +132,12 @@ for model in models:
     for infile in infiles:
         print(infile)
         cube = iris.load_cube(infile)
-        interp_cube = interp_3x3(cube)
-        outfile = os.path.splitext(infile)[0]+'.3x3.nc'
-        iris.save(interp_cube,outfile)
+        if do_daily:
+            daily_cube = avg_daily(cube)
+            outfile = os.path.splitext(infile)[0]+'.daily.nc'
+            iris.save(daily_cube,outfile)
+        if do_3x3:
+            interp_cube = interp_3x3(cube)
+            outfile = os.path.splitext(infile)[0]+'.3x3.nc'
+            iris.save(interp_cube,outfile)
 #iris.save(out_interp_cube,basedir+'/3B-HHR.MS.MRG.3IMERG.'+date+'.3hr_means_3x3.V06B.nc',unlimited_dimensions=['time'],zlib=True)
