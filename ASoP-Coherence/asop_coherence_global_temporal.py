@@ -269,7 +269,7 @@ def compute_temporal_autocorr(precip,max_lag):
     out_cubelist = [temporal_autocorr,temporal_autocorr_mean]
     return(out_cubelist)
 
-def compute_temporal_summary(precip,ndivs,min_precip_threshold=1/86400.0,wet_season_threshold=1.0/24.0):
+def compute_temporal_summary(precip,ndivs):
     import numpy.ma as ma
     import dask
 
@@ -351,7 +351,7 @@ def compute_onoff_metric_grid(this_monthyear,lower_thresh,upper_thresh):
     import numpy as np
 
     upper_mask = this_monthyear.copy(data=np.where(this_monthyear.data >= upper_thresh.data,1,0))
-    lower_mask = this_monthyear.copy(data=np.where(this_monthyear.data <= lower_thresh.data,1,0))
+    lower_mask = this_monthyear.copy(data=np.where(this_monthyear.data < lower_thresh.data,1,0))
     upper_roll = upper_mask.copy(data=np.roll(upper_mask.data,1,axis=0))
     lower_roll = lower_mask.copy(data=np.roll(lower_mask.data,1,axis=0))
     non = upper_mask.collapsed('time',iris.analysis.SUM)
