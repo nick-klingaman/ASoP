@@ -15,7 +15,7 @@ import asop_coherence_global as asop_global
 if __name__ == '__main__':
     client = Client()
 #    datasets=['BCC','GPM_IMERG','AWI']
-    datasets=['ACCESS','FGOALS','GISS','MIROC','MPI-ESM1','SAM0-UNICON']
+    datasets=['ACCESS_3hr_3x3','FGOALS_3hr_3x3','GISS_3hr_3x3','MIROC_3hr_3x3','MPI-ESM1_3hr_3x3','SAM0-UNICON_3hr_3x3']
     n_datasets=len(datasets)
     wet_season_threshold = 1.0/24.0
     wet_season_threshold_str='1d24'
@@ -29,8 +29,8 @@ if __name__ == '__main__':
 
         masked_precip_file=str(asop_dict['dir'])+'/'+asop_dict['desc']+'_asop_masked_precip_wetseason'+wet_season_threshold_str+'.nc'
         masked_min_precip_file=str(asop_dict['dir'])+'/'+asop_dict['desc']+'_asop_masked_precip_wetseason'+wet_season_threshold_str+'_minprecip'+min_precip_threshold_str+'.nc'
-        temporal_summary_file=str(asop_dict['dir'])+'/'+str(asop_dict['desc'])+'_asop_temporal_summary_wetseason'+wet_season_threshold_str+'.nc'
-        temporal_autocorr_file=str(asop_dict['dir'])+'/'+str(asop_dict['desc'])+'_asop_temporal_autocorr_wetseason'+wet_season_threshold_str+'.nc'
+        spatial_summary_file=str(asop_dict['dir'])+'/'+str(asop_dict['desc'])+'_asop_spatial_summary_wetseason'+wet_season_threshold_str+'.nc'
+        spatial_corr_file=str(asop_dict['dir'])+'/'+str(asop_dict['desc'])+'_asop_spatial_corr_wetseason'+wet_season_threshold_str+'.nc'
 
         if os.path.exists(masked_min_precip_file) and not masked_overwrite:
             print('-->--> Reading masked precipitation (by wet season and by min precip) from file')
@@ -59,10 +59,10 @@ if __name__ == '__main__':
             masked_min_precip.long_name='Masked precipitation for wet season (threshold '+wet_season_threshold_str+' of annual total) and min mean precip (threshold '+min_precip_threshold_str+' mm/day)'
             with dask.config.set(scheduler='synchronous'):
                 iris.save(masked_min_precip,masked_min_precip_file)
-        print('-->--> Computing temporal autocorrelation metrics')
-        temporal_autocorr = asop_global.compute_temporal_autocorr(masked_min_precip,17)
-        print('-->--> Computing temporal summary metrics')
-        temporal_summary = asop_global.compute_temporal_summary(masked_min_precip,4)
+        print('-->--> Computing spatial correlation metrics')
+        spatial_corr = asop_global.compute_equalgrid_corr_global(masked_min_precip,[0,400,600,800,1000,1200])
+        print('-->--> Computing spatial summary metrics')
+        spatial_summary = asop_global.compute_spatial_summary(masked_min_precip,4)
         with dask.config.set(scheduler='synchronous'):
-            iris.save(temporal_summary,temporal_summary_file)
-            iris.save(temporal_autocorr,temporal_autocorr_file)
+            iris.save(spatial_summary,spatial_summary_file)
+            iris.save(spatial_corr,spatial_corr_file)
