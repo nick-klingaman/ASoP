@@ -100,16 +100,26 @@ def get_asop_dict(key):
         raise Exception('No dictionary for '+key)
     return(asop_dict)
 
-def interp_3x3(cube):
-    interp_lon = iris.coords.DimCoord(np.arange(1.5,360,3),standard_name='longitude',units='degrees_east',circular=True)
-    nlon = len(interp_lon.points)
-    interp_lat = iris.coords.DimCoord(np.arange(-88.5,90,3),standard_name='latitude',units='degrees')
-    nlat = len(interp_lat.points)
-    interp_cube = iris.cube.Cube(data=np.empty((nlat,nlon)),dim_coords_and_dims=[(interp_lat,0),(interp_lon,1)])
-    interp_cube.coord('longitude').guess_bounds()
-    interp_cube.coord('latitude').guess_bounds()
-    out_cube = cube.regrid(interp_cube,iris.analysis.AreaWeighted(mdtol=0))
-    return(out_cube)
+def interp_nxn(cube,n):
+    import iris
+    import numpy as np
+    
+    n = np.int(n)
+    print(n)
+    if cube.coord('longitude').has_bounds() == False:
+        cube.coord('longitude').guess_bounds()
+    if cube.coord('latitude').has_bounds() == False:
+        cube.coord('latitude').guess_bounds()
+    latitude = iris.coords.DimCoord(np.linspace(-90+n/2,90-n/2,180//n), standard_name='latitude', units='degrees_north')
+    longitude = iris.coords.DimCoord(np.linspace(n/2,360-n/2,360//n),standard_name='longitude',units='degrees_east',circular=True)
+    target_cube = iris.cube.Cube(np.zeros((180//n,360//n),np.float32),dim_coords_and_dims=[(latitude,0),(longitude,1)])
+    target_cube.coord('longitude').circular=True
+    target_cube.coord('longitude').guess_bounds()
+    target_cube.coord('latitude').guess_bounds()
+    target_cube.coord('longitude').coord_system=cube.coord('longitude').coord_system
+    target_cube.coord('latitude').coord_system=cube.coord('latitude').coord_system
+    cube_interp = cube.regrid(target_cube,iris.analysis.AreaWeighted(mdtol=1))
+    return(cube_interp)
 
 def avg_daily(cube):
     from iris.coord_categorisation import add_day_of_year,add_year
@@ -120,13 +130,15 @@ def avg_daily(cube):
     print(daily_cube)
     return(daily_cube)
 
-models=['BCC','GISS']#,'MPI-ESM1','ACCESS','FGOALS']
+models=['AWI','MIROC','SAM0-UNICON','BCC','GISS','MPI-ESM1','ACCESS','FGOALS']
 do_daily = True
+do_daily_3x3 = True
+do_daily_2x2 = True
 do_3x3 = False
 for model in models:
     print(model)
     asop_dict = get_asop_dict(model)
-    infiles = glob.glob(str(asop_dict['dir'])+'/pr_3hr_'+asop_dict['desc']+'_*0.nc')
+    infiles = glob.glob(str(asop_dict['dir'])+'/pr_3hr_'+asop_dict['desc']+'*0.nc')
     print(asop_dict['dir'])
     print(infiles)
     for infile in infiles:
@@ -136,8 +148,16 @@ for model in models:
             daily_cube = avg_daily(cube)
             outfile = os.path.splitext(infile)[0]+'.daily.nc'
             iris.save(daily_cube,outfile)
+            if do_daily_3x3:
+                daily_3x3_cube = interp_nxn(daily_cube,3)
+                outfile = os.path.splitext(infile)[0]+'.daily.3x3.nc'
+                iris.save(daily_3x3_cube,outfile)
+            if do_daily_2x2:
+                daily_2x2_cube = interp_nxn(daily_cube,2)
+                outfile = os.path.splitext(infile)[0]+'.daily.2x2.nc'
+                iris.save(daily_2x2_cube,outfile)
         if do_3x3:
-            interp_cube = interp_3x3(cube)
+            interp_cube = interp_nxn(cube,2)
             outfile = os.path.splitext(infile)[0]+'.3x3.nc'
             iris.save(interp_cube,outfile)
 #iris.save(out_interp_cube,basedir+'/3B-HHR.MS.MRG.3IMERG.'+date+'.3hr_means_3x3.V06B.nc',unlimited_dimensions=['time'],zlib=True)

@@ -6,29 +6,78 @@ def get_asop_dict(key):
         asop_dict={
             'desc': 'AWI-CM-1-1-MR_historical_r1i1p1f1_gn_3hr_3x3',
             'dir': cmip6_path/'AWI-CM-1-1-MR',
-            'file_pattern': 'pr_3hr*.3x3.nc',
+            'file_pattern': 'pr_3hr*0.3x3.nc',
             'name': 'AWI',
             'start_year': 1990,
             'stop_year': 2014,
-            'dt': 10800,
             'legend_name': 'AWI',
             'region': [-90,90,0,360],
-            'color': 'red',
-            'symbol': '<'
+        }
+    if key == 'AWI_daily_3x3':
+        asop_dict={
+            'desc': 'AWI-CM-1-1-MR_historical_r1i1p1f1_gn_daily_3x3',
+            'dir': cmip6_path/'AWI-CM-1-1-MR',
+            'file_pattern': 'pr_3hr*.daily.3x3.nc',
+            'name': 'AWI',
+            'start_year': 1990,
+            'stop_year': 2014,
+            'legend_name': 'AWI',
+            'region': [-90,90,0,360]
         }
     elif key == 'BCC_3hr_3x3':
         asop_dict={
             'dir': cmip6_path/'BCC-CSM2-MR',
             'desc': 'BCC-CSM2-MR_historical_r1i1p1f1_gn_3hr_3x3',
             'name': 'BCC',
-            'file_pattern': 'pr_3hr*.3x3.nc',
-            'dt': 10800,
+            'file_pattern': 'pr_3hr*0.3x3.nc',
             'start_year': 1980,
             'stop_year': 2014,
             'legend_name': 'BCC',
-            'region': [-90,90,0,360],
-            'color': 'blue',
-            'symbol': '8'
+            'region': [-90,90,0,360]
+        }
+    elif key == 'BCC_daily_3x3':
+        asop_dict={
+            'dir': cmip6_path/'BCC-CSM2-MR',
+            'desc': 'BCC-CSM2-MR_historical_r1i1p1f1_gn_daily_3x3',
+            'name': 'BCC',
+            'file_pattern': 'pr_3hr*.daily.3x3.nc',
+            'start_year': 1980,
+            'stop_year': 2014,
+            'legend_name': 'BCC',
+            'region': [-90,90,0,360]
+        }
+    elif key == 'GPM_IMERG_daily_3x3':
+        asop_dict={
+            'desc': '3B-DAY.MS.MRG.3IMERG.3x3',
+            'dir': obs_path/'GPM_IMERG'/'daily',
+            'file_pattern': '3B-DAY.MS.MRG.3IMERG.*.V06.3x3.nc',
+            'name': 'IMERG-3B-V06',
+            'start_year': 2001,
+            'stop_year': 2019,
+            'legend_name': 'IMERG',
+            'region': [-60,60,0,360],
+        }
+    elif key == 'GPM_IMERG_daily_2x2':
+        asop_dict={
+            'desc': '3B-DAY.MS.MRG.3IMERG.2x2',
+            'dir': obs_path/'GPM_IMERG'/'daily',
+            'file_pattern': '3B-DAY.MS.MRG.3IMERG.*.V06.2x2.nc',
+            'name': 'IMERG-3B-V06',
+            'start_year': 2001,
+            'stop_year': 2019,
+            'legend_name': 'IMERG',
+            'region': [-60,60,0,360]
+        }
+    elif key == 'GPM_IMERG_daily_1x1':
+        asop_dict={
+            'desc': '3B-DAY.MS.MRG.3IMERG.1x1',
+            'dir': obs_path/'GPM_IMERG'/'daily',
+            'file_pattern': '3B-DAY.MS.MRG.3IMERG.*.V06.1x1.nc',
+            'name': 'IMERG-3B-V06',
+            'start_year': 2001,
+            'stop_year': 2019,
+            'legend_name': 'IMERG',
+            'region': [-60,60,0,360]
         }
     elif key == 'GPM_IMERG_3hr_3x3':
         asop_dict={
@@ -38,11 +87,8 @@ def get_asop_dict(key):
             'name': 'IMERG-3B-V06',
             'start_year': 2001,
             'stop_year': 2018,
-            'dt': 10800,
             'legend_name': 'IMERG',
-            'region': [-60,60,0,360],
-            'color': 'black',
-            'symbol': '>',
+            'region': [-60,60,0,360]
         }
     elif key == 'GPM_IMERG_3hr_2x2':
         asop_dict={
@@ -52,95 +98,140 @@ def get_asop_dict(key):
             'name': 'IMERG-3B-V06',
             'start_year': 2001,
             'stop_year': 2018,
-            'dt': 10800,
             'legend_name': 'IMERG',
-            'region': [-60,60,0,360],
-            'color': 'black',
-            'symbol': '>',
+            'region': [-60,60,0,360]
         }
     elif key == 'ACCESS_3hr_3x3':
         asop_dict={
             'desc': 'ACCESS-CM2_historical_r1i1p1f1_gn_3hr_3x3',
             'dir': cmip6_path/'ACCESS-CM2',
             'name': 'ACCESS',
-            'file_pattern': 'pr_3hr*.3x3.nc',
-            'dt': 10800,
+            'file_pattern': 'pr_3hr*0.3x3.nc',
             'start_year': 1990,
             'stop_year': 2014,
             'legend_name': 'ACCESS',
             'region': [-90,90,0,360],
-            'color': 'purple',
-            'symbol': '>'
+        }
+    elif key == 'ACCESS_daily_3x3':
+        asop_dict={
+            'desc': 'ACCESS-CM2_historical_r1i1p1f1_gn_daily_3x3',
+            'dir': cmip6_path/'ACCESS-CM2',
+            'name': 'ACCESS',
+            'file_pattern': 'pr_3hr*.daily.3x3.nc',
+            'start_year': 1990,
+            'stop_year': 2014,
+            'legend_name': 'ACCESS',
+            'region': [-90,90,0,360]
         }
     elif key == 'FGOALS_3hr_3x3':
         asop_dict={
             'desc': 'FGOALS-g3_historical_r1i1p1f1_gn_3hr_3x3',
             'dir': cmip6_path/'FGOALS-g3',
             'name': 'FGOALS',
-            'dt': 10800,
-            'file_pattern': 'pr_3hr*.3x3.nc',
+            'file_pattern': 'pr_3hr*0.3x3.nc',
             'start_year': 1990,
             'stop_year': 2016,
             'legend_name': 'FGOALS',
-            'region': [-90,90,0,360],
-            'color': 'brown',
-            'symbol': '<'
+            'region': [-90,90,0,360]
+        }
+    elif key == 'FGOALS_daily_3x3':
+        asop_dict={
+            'desc': 'FGOALS-g3_historical_r1i1p1f1_gn_daily_3x3',
+            'dir': cmip6_path/'FGOALS-g3',
+            'name': 'FGOALS',
+            'file_pattern': 'pr_3hr*.daily.3x3.nc',
+            'start_year': 1990,
+            'stop_year': 2016,
+            'legend_name': 'FGOALS',
+            'region': [-90,90,0,360]
         }
     elif key == 'GISS_3hr_3x3':
         asop_dict={
             'dir': cmip6_path/'GISS-E2-1-G',
             'name': 'GISS',
             'desc': 'GISS-E2-1-G_historical_r1i1p1f1_gn_3hr_3x3',
-            'dt': 10800,
-            'file_pattern': 'pr_3hr*.3x3.nc',
+            'file_pattern': 'pr_3hr*0.3x3.nc',
             'start_year': 1990,
             'stop_year': 2014,
             'legend_name': 'GISS',
-            'region': [-90,90,0,360],
-            'color': 'brown',
-            'symbol': '<'
+            'region': [-90,90,0,360]
+        }
+    elif key == 'GISS_daily_3x3':
+        asop_dict={
+            'dir': cmip6_path/'GISS-E2-1-G',
+            'name': 'GISS',
+            'desc': 'GISS-E2-1-G_historical_r1i1p1f1_gn_daily_3x3',
+            'file_pattern': 'pr_3hr*.daily.3x3.nc',
+            'start_year': 1990,
+            'stop_year': 2014,
+            'legend_name': 'GISS',
+            'region': [-90,90,0,360]
         }
     elif key == 'MIROC_3hr_3x3':
         asop_dict={
             'dir': cmip6_path/'MIROC6',
             'name': 'MIROC',
             'desc': 'MIROC6_historical_r1i1p1f1_gn_3hr_3x3',
-            'dt': 10800,
-            'file_pattern': 'pr_3hr*.3x3.nc',
+            'file_pattern': 'pr_3hr*0.3x3.nc',
             'start_year': 1990,
             'stop_year': 2014,
             'legend_name': 'MIROC6',
-            'region': [-90,90,0,360],
-            'color': 'brown',
-            'symbol': '<'
+            'region': [-90,90,0,360]
+        }
+    elif key == 'MIROC_daily_3x3':
+        asop_dict={
+            'dir': cmip6_path/'MIROC6',
+            'name': 'MIROC',
+            'desc': 'MIROC6_historical_r1i1p1f1_gn_daily_3x3',
+            'file_pattern': 'pr_3hr*.daily.3x3.nc',
+            'start_year': 1990,
+            'stop_year': 2014,
+            'legend_name': 'MIROC6',
+            'region': [-90,90,0,360]
         }
     elif key == 'MPI-ESM1_3hr_3x3':
         asop_dict={
             'dir': cmip6_path/'MPI-ESM1-2-HR',
             'name': 'MPI-ESM',
             'desc': 'MPI-ESM1-2-HR_historical_r1i1p1f1_gn_3hr_3x3',
-            'dt': 10800,
-            'file_pattern': 'pr_3hr*.3x3.nc',
+            'file_pattern': 'pr_3hr*0.3x3.nc',
             'start_year': 1990,
             'stop_year': 2014,
             'legend_name': 'MPI-ESM',
-            'region': [-90,90,0,360],
-            'color': 'brown',
-            'symbol': '<'
+            'region': [-90,90,0,360]
+        }
+    elif key == 'MPI-ESM1_daily_3x3':
+        asop_dict={
+            'dir': cmip6_path/'MPI-ESM1-2-HR',
+            'name': 'MPI-ESM',
+            'desc': 'MPI-ESM1-2-HR_historical_r1i1p1f1_gn_daily_3x3',
+            'file_pattern': 'pr_3hr*.daily.3x3.nc',
+            'start_year': 1990,
+            'stop_year': 2014,
+            'legend_name': 'MPI-ESM',
+            'region': [-90,90,0,360]
         }
     elif key == 'SAM0-UNICON_3hr_3x3':
         asop_dict={
             'dir': cmip6_path/'SAM0-UNICON',
             'name': 'SAM',
             'desc': 'SAM0-UNICON_historical_r1i1p1f1_gn_3hr_3x3',
-            'dt': 10800,
-            'file_pattern': 'pr_3hr*.3x3.nc',
+            'file_pattern': 'pr_3hr*0.3x3.nc',
             'start_year': 1990,
             'stop_year': 2014,
             'legend_name': 'SAM',
-            'region': [-90,90,0,360],
-            'color': 'brown',
-            'symbol': '<'
+            'region': [-90,90,0,360]
+        }
+    elif key == 'SAM0-UNICON_daily_3x3':
+        asop_dict={
+            'dir': cmip6_path/'SAM0-UNICON',
+            'name': 'SAM',
+            'desc': 'SAM0-UNICON_historical_r1i1p1f1_gn_daily_3x3',
+            'file_pattern': 'pr_3hr*.daily.3x3.nc',
+            'start_year': 1990,
+            'stop_year': 2014,
+            'legend_name': 'SAM',
+            'region': [-90,90,0,360]
         }
     else:
         raise Exception('No dictionary for '+key)
@@ -205,9 +296,14 @@ def mask_min_precip(precip,min_precip_threshold=1.0):
         input_units = 'mm/h'
     elif precip.units == 'kg m-2 s-1':
         input_units = 'mm/s'
+    elif precip.units == 'mm':
+        input_units = 'mm/day'
     else:
         input_units = precip.units
-    threshold_units = Units.conform(min_precip_threshold,Units('mm/day'),Units(input_units)) #precip.units))
+    if input_units == 'mm/day':
+        threshold_units = min_precip_threshold
+    else:
+        threshold_units = Units.conform(min_precip_threshold,Units('mm/day'),Units(input_units)) #precip.units)
     nt = len(precip.coord('time').points)
     nlon = len(precip.coord('longitude').points)
     nlat = len(precip.coord('latitude').points)
@@ -519,19 +615,19 @@ def compute_spatial_summary(precip,ndivs):
     onon_freq_mean = onon_freq.collapsed('month_number',iris.analysis.MEAN)
     onon_freq_mean.data = np.nanmean(onon_freq.data,axis=0)
     onon_freq_mean.var_name='prob_onon_mean'
-    onon_freq_mean.long_name='Probability of upper division nearby upper division (mean of all months in wet season)'
+    onon_freq_mean.long_name='Probability of upper division neighbouring upper division (mean of all months in wet season)'
     onoff_freq_mean = onoff_freq.collapsed('month_number',iris.analysis.MEAN)
     onoff_freq_mean.data = np.nanmean(onoff_freq.data,axis=0)
     onoff_freq_mean.var_name='prob_onoff_mean'
-    onoff_freq_mean.long_name='Probability of upper division nearby lower division (mean of all months in wet season)'
+    onoff_freq_mean.long_name='Probability of upper division neighbouring lower division (mean of all months in wet season)'
     offon_freq_mean = offon_freq.collapsed('month_number',iris.analysis.MEAN)
     offon_freq_mean.data = np.nanmean(offon_freq.data,axis=0)
     offon_freq_mean.var_name='prob_offon_mean'
-    offon_freq_mean.long_name='Probability of lower division nearby upper division (mean of all months in wet season)'
+    offon_freq_mean.long_name='Probability of lower division neighbouring upper division (mean of all months in wet season)'
     offoff_freq_mean = offoff_freq.collapsed('month_number',iris.analysis.MEAN)
     offoff_freq_mean.data = np.nanmean(offoff_freq.data,axis=0)
     offoff_freq_mean.var_name='prob_offoff_mean'
-    offoff_freq_mean.long_name='Probability of lower division followed by lower division (mean of all months in wet season)'
+    offoff_freq_mean.long_name='Probability of lower division neighbouring lower division (mean of all months in wet season)'
     out_cubelist = [space_inter,onon_freq,onoff_freq,offon_freq,offoff_freq,lower_thresh,upper_thresh,space_inter_mean,onon_freq_mean,onoff_freq_mean,offon_freq_mean,offoff_freq_mean]
     return(out_cubelist)
 
