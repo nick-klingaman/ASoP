@@ -2,56 +2,57 @@ def get_asop_dict(key):
     from pathlib import Path
     cmip6_path=Path('/media/nick/lacie_tb3/data_from_gill/CMIP6')
     obs_path=Path('/media/nick/lacie_tb3/datasets')
+    print(key)
     if key == 'AWI_3hr_3x3':
         asop_dict={
             'desc': 'AWI-CM-1-1-MR_historical_r1i1p1f1_gn_3hr_3x3',
             'dir': cmip6_path/'AWI-CM-1-1-MR',
             'file_pattern': 'pr_3hr*0.3x3.nc',
-            'name': 'AWI',
+            'name': 'AWI_3hr_3x3',
             'start_year': 1990,
             'stop_year': 2014,
             'legend_name': 'AWI',
-            'region': [-90,90,0,360],
+            'region': [-60,60,0,360],
         }
-    if key == 'AWI_daily_3x3':
+    elif key == 'AWI_daily_3x3':
         asop_dict={
             'desc': 'AWI-CM-1-1-MR_historical_r1i1p1f1_gn_daily_3x3',
             'dir': cmip6_path/'AWI-CM-1-1-MR',
             'file_pattern': 'pr_3hr*.daily.3x3.nc',
-            'name': 'AWI',
+            'name': 'AWI_daily_3x3',
             'start_year': 1990,
             'stop_year': 2014,
             'legend_name': 'AWI',
-            'region': [-90,90,0,360]
+            'region': [-60,60,0,360]
         }
     elif key == 'BCC_3hr_3x3':
         asop_dict={
             'dir': cmip6_path/'BCC-CSM2-MR',
             'desc': 'BCC-CSM2-MR_historical_r1i1p1f1_gn_3hr_3x3',
-            'name': 'BCC',
+            'name': 'BCC_3hr_3x3',
             'file_pattern': 'pr_3hr*0.3x3.nc',
             'start_year': 1980,
             'stop_year': 2014,
             'legend_name': 'BCC',
-            'region': [-90,90,0,360]
+            'region': [-60,60,0,360]
         }
     elif key == 'BCC_daily_3x3':
         asop_dict={
             'dir': cmip6_path/'BCC-CSM2-MR',
             'desc': 'BCC-CSM2-MR_historical_r1i1p1f1_gn_daily_3x3',
-            'name': 'BCC',
+            'name': 'BCC_daily_3x3',
             'file_pattern': 'pr_3hr*.daily.3x3.nc',
             'start_year': 1980,
             'stop_year': 2014,
             'legend_name': 'BCC',
-            'region': [-90,90,0,360]
+            'region': [-60,60,0,360]
         }
     elif key == 'GPM_IMERG_daily_3x3':
         asop_dict={
             'desc': '3B-DAY.MS.MRG.3IMERG.3x3',
             'dir': obs_path/'GPM_IMERG'/'daily',
             'file_pattern': '3B-DAY.MS.MRG.3IMERG.*.V06.3x3.nc',
-            'name': 'IMERG-3B-V06',
+            'name': 'IMERG-3B-V06_daily_3x3',
             'start_year': 2001,
             'stop_year': 2019,
             'legend_name': 'IMERG',
@@ -62,7 +63,7 @@ def get_asop_dict(key):
             'desc': '3B-DAY.MS.MRG.3IMERG.2x2',
             'dir': obs_path/'GPM_IMERG'/'daily',
             'file_pattern': '3B-DAY.MS.MRG.3IMERG.*.V06.2x2.nc',
-            'name': 'IMERG-3B-V06',
+            'name': 'IMERG-3B-V06_daily_2x2',
             'start_year': 2001,
             'stop_year': 2019,
             'legend_name': 'IMERG',
@@ -73,7 +74,7 @@ def get_asop_dict(key):
             'desc': '3B-DAY.MS.MRG.3IMERG.1x1',
             'dir': obs_path/'GPM_IMERG'/'daily',
             'file_pattern': '3B-DAY.MS.MRG.3IMERG.*.V06.1x1.nc',
-            'name': 'IMERG-3B-V06',
+            'name': 'IMERG-3B-V06_daily_1x1',
             'start_year': 2001,
             'stop_year': 2019,
             'legend_name': 'IMERG',
@@ -84,7 +85,7 @@ def get_asop_dict(key):
             'desc': '3B-HHR.MS.MRG.3IMERG.V06B.3hr_means_3x3',
             'dir': obs_path/'GPM_IMERG',
             'file_pattern': '3B-HHR.MS.MRG.3IMERG.*.3hr_means_3x3.V06B.nc',
-            'name': 'IMERG-3B-V06',
+            'name': 'IMERG-3B-V06_3hr_3x3',
             'start_year': 2001,
             'stop_year': 2018,
             'legend_name': 'IMERG',
@@ -95,7 +96,7 @@ def get_asop_dict(key):
             'desc': '3B-HHR.MS.MRG.3IMERG.V06B.3hr_means_2x2',
             'dir': obs_path/'GPM_IMERG',
             'file_pattern': '3B-HHR.MS.MRG.3IMERG.*.3hr_means_2x2.V06B.nc',
-            'name': 'IMERG-3B-V06',
+            'name': 'IMERG-3B-V06_3hr_2x2',
             'start_year': 2001,
             'stop_year': 2018,
             'legend_name': 'IMERG',
@@ -105,133 +106,133 @@ def get_asop_dict(key):
         asop_dict={
             'desc': 'ACCESS-CM2_historical_r1i1p1f1_gn_3hr_3x3',
             'dir': cmip6_path/'ACCESS-CM2',
-            'name': 'ACCESS',
+            'name': 'ACCESS_3hr_3x3',
             'file_pattern': 'pr_3hr*0.3x3.nc',
             'start_year': 1990,
             'stop_year': 2014,
             'legend_name': 'ACCESS',
-            'region': [-90,90,0,360],
+            'region': [-60,60,0,360],
         }
     elif key == 'ACCESS_daily_3x3':
         asop_dict={
             'desc': 'ACCESS-CM2_historical_r1i1p1f1_gn_daily_3x3',
             'dir': cmip6_path/'ACCESS-CM2',
-            'name': 'ACCESS',
+            'name': 'ACCESS_daily_3x3',
             'file_pattern': 'pr_3hr*.daily.3x3.nc',
             'start_year': 1990,
             'stop_year': 2014,
             'legend_name': 'ACCESS',
-            'region': [-90,90,0,360]
+            'region': [-60,60,0,360]
         }
     elif key == 'FGOALS_3hr_3x3':
         asop_dict={
             'desc': 'FGOALS-g3_historical_r1i1p1f1_gn_3hr_3x3',
             'dir': cmip6_path/'FGOALS-g3',
-            'name': 'FGOALS',
+            'name': 'FGOALS_3hr_3x3',
             'file_pattern': 'pr_3hr*0.3x3.nc',
             'start_year': 1990,
             'stop_year': 2016,
             'legend_name': 'FGOALS',
-            'region': [-90,90,0,360]
+            'region': [-60,60,0,360]
         }
     elif key == 'FGOALS_daily_3x3':
         asop_dict={
             'desc': 'FGOALS-g3_historical_r1i1p1f1_gn_daily_3x3',
             'dir': cmip6_path/'FGOALS-g3',
-            'name': 'FGOALS',
+            'name': 'FGOALS_daily_3x3',
             'file_pattern': 'pr_3hr*.daily.3x3.nc',
             'start_year': 1990,
             'stop_year': 2016,
             'legend_name': 'FGOALS',
-            'region': [-90,90,0,360]
+            'region': [-60,60,0,360]
         }
     elif key == 'GISS_3hr_3x3':
         asop_dict={
             'dir': cmip6_path/'GISS-E2-1-G',
-            'name': 'GISS',
+            'name': 'GISS_3hr_3x3',
             'desc': 'GISS-E2-1-G_historical_r1i1p1f1_gn_3hr_3x3',
             'file_pattern': 'pr_3hr*0.3x3.nc',
             'start_year': 1990,
             'stop_year': 2014,
             'legend_name': 'GISS',
-            'region': [-90,90,0,360]
+            'region': [-60,60,0,360]
         }
     elif key == 'GISS_daily_3x3':
         asop_dict={
             'dir': cmip6_path/'GISS-E2-1-G',
-            'name': 'GISS',
+            'name': 'GISS_daily_3x3',
             'desc': 'GISS-E2-1-G_historical_r1i1p1f1_gn_daily_3x3',
             'file_pattern': 'pr_3hr*.daily.3x3.nc',
             'start_year': 1990,
             'stop_year': 2014,
             'legend_name': 'GISS',
-            'region': [-90,90,0,360]
+            'region': [-60,60,0,360]
         }
     elif key == 'MIROC_3hr_3x3':
         asop_dict={
             'dir': cmip6_path/'MIROC6',
-            'name': 'MIROC',
+            'name': 'MIROC_3hr_3x3',
             'desc': 'MIROC6_historical_r1i1p1f1_gn_3hr_3x3',
             'file_pattern': 'pr_3hr*0.3x3.nc',
             'start_year': 1990,
             'stop_year': 2014,
             'legend_name': 'MIROC6',
-            'region': [-90,90,0,360]
+            'region': [-60,60,0,360]
         }
     elif key == 'MIROC_daily_3x3':
         asop_dict={
             'dir': cmip6_path/'MIROC6',
-            'name': 'MIROC',
+            'name': 'MIROC_daily_3x3',
             'desc': 'MIROC6_historical_r1i1p1f1_gn_daily_3x3',
             'file_pattern': 'pr_3hr*.daily.3x3.nc',
             'start_year': 1990,
             'stop_year': 2014,
             'legend_name': 'MIROC6',
-            'region': [-90,90,0,360]
+            'region': [-60,60,0,360]
         }
     elif key == 'MPI-ESM1_3hr_3x3':
         asop_dict={
             'dir': cmip6_path/'MPI-ESM1-2-HR',
-            'name': 'MPI-ESM',
+            'name': 'MPI-ESM_3hr_3x3',
             'desc': 'MPI-ESM1-2-HR_historical_r1i1p1f1_gn_3hr_3x3',
             'file_pattern': 'pr_3hr*0.3x3.nc',
             'start_year': 1990,
             'stop_year': 2014,
             'legend_name': 'MPI-ESM',
-            'region': [-90,90,0,360]
+            'region': [-60,60,0,360]
         }
     elif key == 'MPI-ESM1_daily_3x3':
         asop_dict={
             'dir': cmip6_path/'MPI-ESM1-2-HR',
-            'name': 'MPI-ESM',
+            'name': 'MPI-ESM_daily_3x3',
             'desc': 'MPI-ESM1-2-HR_historical_r1i1p1f1_gn_daily_3x3',
             'file_pattern': 'pr_3hr*.daily.3x3.nc',
             'start_year': 1990,
             'stop_year': 2014,
             'legend_name': 'MPI-ESM',
-            'region': [-90,90,0,360]
+            'region': [-60,60,0,360]
         }
     elif key == 'SAM0-UNICON_3hr_3x3':
         asop_dict={
             'dir': cmip6_path/'SAM0-UNICON',
-            'name': 'SAM',
+            'name': 'SAM_3hr_3x3',
             'desc': 'SAM0-UNICON_historical_r1i1p1f1_gn_3hr_3x3',
             'file_pattern': 'pr_3hr*0.3x3.nc',
             'start_year': 1990,
             'stop_year': 2014,
             'legend_name': 'SAM',
-            'region': [-90,90,0,360]
+            'region': [-60,60,0,360]
         }
     elif key == 'SAM0-UNICON_daily_3x3':
         asop_dict={
             'dir': cmip6_path/'SAM0-UNICON',
-            'name': 'SAM',
+            'name': 'SAM_daily_3x3',
             'desc': 'SAM0-UNICON_historical_r1i1p1f1_gn_daily_3x3',
             'file_pattern': 'pr_3hr*.daily.3x3.nc',
             'start_year': 1990,
             'stop_year': 2014,
             'legend_name': 'SAM',
-            'region': [-90,90,0,360]
+            'region': [-60,60,0,360]
         }
     else:
         raise Exception('No dictionary for '+key)
