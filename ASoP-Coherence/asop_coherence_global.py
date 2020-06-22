@@ -77,7 +77,7 @@ def get_asop_dict(key):
             'start_year': 2001,
             'stop_year': 2019,
             'legend_name': 'IMERG',
-            'region': [-60,60,0,360]
+            'region': [-59,59,0,360]
         }
     elif key == 'GPM_IMERG_3hr_3x3':
         asop_dict={
@@ -95,6 +95,17 @@ def get_asop_dict(key):
             'desc': '3B-HHR.MS.MRG.3IMERG.V06B.3hr_means_2x2',
             'dir': obs_path/'GPM_IMERG',
             'file_pattern': '3B-HHR.MS.MRG.3IMERG.*.3hr_means_2x2.V06B.nc',
+            'name': 'IMERG-3B-V06',
+            'start_year': 2001,
+            'stop_year': 2018,
+            'legend_name': 'IMERG',
+            'region': [-60,60,0,360]
+        }
+    elif key == 'GPM_IMERG_3hr_1x1':
+        asop_dict={
+            'desc': '3B-HHR.MS.MRG.3IMERG.V06B.3hr_means_1x1',
+            'dir': obs_path/'GPM_IMERG',
+            'file_pattern': '3B-HHR.MS.MRG.3IMERG.*.3hr_means_1x1.V06B.nc',
             'name': 'IMERG-3B-V06',
             'start_year': 2001,
             'stop_year': 2018,
@@ -541,6 +552,7 @@ def extract_mask_region(precip,centre_lat,centre_lon,dist_min,dist_max):
     ntime=len(time.points)
     pt_dist = np.ones((nlat,nlon))
     dN = 0 ; dS = 0 ; dlon = 0 
+    print(centre_lat,centre_lon)
     for yy,target_lat in enumerate(latitude.points):
         for xx,target_lon in enumerate(longitude.points):
             pt_dist[yy,xx] = haversine((centre_lat,centre_lon),(target_lat,target_lon))

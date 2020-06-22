@@ -14,8 +14,8 @@ import asop_coherence_global as asop_global
 
 if __name__ == '__main__':
     client = Client()
-#    datasets=['GPM_IMERG_daily_3x3','GPM_IMERG_daily_2x2','GPM_IMERG_daily_1x1']
-    datasets=['ACCESS_daily_3x3','FGOALS_daily_3x3','GISS_daily_3x3','MIROC_daily_3x3','MPI-ESM1_daily_3x3','SAM0-UNICON_daily_3x3','AWI_daily_3x3','BCC_daily_3x3']
+    datasets=['GPM_IMERG_daily_1x1']
+#    datasets=['ACCESS_daily_3x3','FGOALS_daily_3x3','GISS_daily_3x3','MIROC_daily_3x3','MPI-ESM1_daily_3x3','SAM0-UNICON_daily_3x3','AWI_daily_3x3','BCC_daily_3x3']
 #    datasets=['ACCESS_3hr_3x3','FGOALS_3hr_3x3','GISS_3hr_3x3','MIROC_3hr_3x3','MPI-ESM1_3hr_3x3','SAM0-UNICON_3hr_3x3']
     n_datasets=len(datasets)
     wet_season_threshold = 1.0/24.0

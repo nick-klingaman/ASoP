@@ -16,7 +16,7 @@ if __name__ == '__main__':
     client = Client()
 #    datasets=['GPM_IMERG_daily_3x3','GPM_IMERG_daily_2x2','GPM_IMERG_daily_1x1']
 #    datasets=['ACCESS_daily_3x3','FGOALS_daily_3x3','GISS_daily_3x3','MIROC_daily_3x3','MPI-ESM1_daily_3x3','SAM0-UNICON_daily_3x3','AWI_daily_3x3','BCC_daily_3x3']
-    datasets = ['BCC_daily_3x3',]
+    datasets = ['GPM_IMERG_3hr_1x1',]
     n_datasets=len(datasets)
     wet_season_threshold = 1.0/24.0
     wet_season_threshold_str='1d24'
