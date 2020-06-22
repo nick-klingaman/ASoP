@@ -1,0 +1,54 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage{graphicx}
+%\usepackage[aboveskip=0pt,belowskip=-10pt]{subfig}
+\usepackage{times,rotating,array,floatrow,fr-subfig}
+\usepackage[aboveskip=-10pt,belowskip=-10pt]{subcaption}
+
+\usepackage[margin=1.5cm]{geometry}
+
+\captionsetup[subfloat]{labelfont=large,labelformat=simple,labelsep=period,position=top,justification=raggedright,singlelinecheck=false}
+\floatsetup[table]{valign=c}
+\floatsetup[subfigure]{valign=c,style=Plaintop,valign=c,heightadjust=object,captionskip=2pt}
+
+\begin{document}
+\thispagestyle{empty}
+
+\begin{figure*}[h]
+    \ffigbox{}{\CommonHeightRow[.05\textheight]{\begin{subfloatrow}
+        \ffigbox[\FBwidth]{\includegraphics[width=.32\textwidth,angle=0]{./asop_coherence_global_spatial_IMERG-3B-V06_3hr_3x3_distcorr_threshold0.5.eps}}{\caption{GPM IMERG 3hr 3x3}} \hspace{0.05in}
+        \ffigbox[\FBwidth]{\includegraphics[width=.32\textwidth,angle=0]{./asop_coherence_global_spatial_ACCESS_3hr_3x3-minus-IMERG-3B-V06_3hr_3x3_distcorr_threshold0.5.eps}}{\caption{ACCESS minus IMERG 3hr 3x3}} \hspace{0.05in}
+        \ffigbox[\FBwidth]{\includegraphics[width=.32\textwidth,angle=0]{./asop_coherence_global_spatial_AWI_3hr_3x3-minus-IMERG-3B-V06_3hr_3x3_distcorr_threshold0.5.eps}}{\caption{AWI minus IMERG 3hr 3x3}}
+    \end{subfloatrow}}} \vspace{0.2in}
+    \ffigbox{}{\CommonHeightRow[.05\textheight]{\begin{subfloatrow}
+        \ffigbox[\FBwidth]{\includegraphics[width=.32\textwidth,angle=0]{./asop_coherence_global_spatial_BCC_3hr_3x3-minus-IMERG-3B-V06_3hr_3x3_distcorr_threshold0.5.eps}}{\caption{BCC minus IMERG 3hr 3x3}}
+        \ffigbox[\FBwidth]{\includegraphics[width=.32\textwidth,angle=0]{./asop_coherence_global_spatial_FGOALS_3hr_3x3-minus-IMERG-3B-V06_3hr_3x3_distcorr_threshold0.5.eps}}{\caption{FGOALS minus IMERG 3hr 3x3}} \hspace{0.05in}
+        \ffigbox[\FBwidth]{\includegraphics[width=.32\textwidth,angle=0]{./asop_coherence_global_spatial_GISS_3hr_3x3-minus-IMERG-3B-V06_3hr_3x3_distcorr_threshold0.5.eps}}{\caption{GISS minus IMERG 3hr 3x3}} \hspace{0.05in}
+    \end{subfloatrow}}} \vspace{0.2in}
+    \ffigbox{}{\CommonHeightRow[.05\textheight]{\begin{subfloatrow}
+        \ffigbox[\FBwidth]{\includegraphics[width=.32\textwidth,angle=0]{./asop_coherence_global_spatial_MIROC_3hr_3x3-minus-IMERG-3B-V06_3hr_3x3_distcorr_threshold0.5.eps}}{\caption{MIROC minus IMERG 3hr 3x3}} \hspace{0.05in}
+        \ffigbox[\FBwidth]{\includegraphics[width=.32\textwidth,angle=0]{./asop_coherence_global_spatial_MPI-ESM_3hr_3x3-minus-IMERG-3B-V06_3hr_3x3_distcorr_threshold0.5.eps}}{\caption{MPI-ESM minus IMERG 3hr 3x3}} \hspace{0.05in}
+        \ffigbox[\FBwidth]{\includegraphics[width=.32\textwidth,angle=0]{./asop_coherence_global_spatial_SAM_3hr_3x3-minus-IMERG-3B-V06_3hr_3x3_distcorr_threshold0.5.eps}}{\caption{SAM minus IMERG 3hr 3x3}}
+        \hspace{0.05in}
+    \end{subfloatrow}}} \vspace{0.2in}
+\end{figure*}
+
+\begin{figure*}[h]
+    \ffigbox{}{\CommonHeightRow[.05\textheight]{\begin{subfloatrow}
+        \ffigbox[\FBwidth]{\includegraphics[width=.32\textwidth,angle=0]{./asop_coherence_global_spatial_IMERG-3B-V06_3hr_3x3_distcorr_threshold0.2.eps}}{\caption{GPM IMERG 3hr 3x3}} \hspace{0.05in}
+        \ffigbox[\FBwidth]{\includegraphics[width=.32\textwidth,angle=0]{./asop_coherence_global_spatial_ACCESS_3hr_3x3-minus-IMERG-3B-V06_3hr_3x3_distcorr_threshold0.2.eps}}{\caption{ACCESS minus IMERG 3hr 3x3}} \hspace{0.05in}
+        \ffigbox[\FBwidth]{\includegraphics[width=.32\textwidth,angle=0]{./asop_coherence_global_spatial_AWI_3hr_3x3-minus-IMERG-3B-V06_3hr_3x3_distcorr_threshold0.2.eps}}{\caption{AWI minus IMERG 3hr 3x3}}
+    \end{subfloatrow}}} \vspace{0.2in}
+    \ffigbox{}{\CommonHeightRow[.05\textheight]{\begin{subfloatrow}
+        \ffigbox[\FBwidth]{\includegraphics[width=.32\textwidth,angle=0]{./asop_coherence_global_spatial_BCC_3hr_3x3-minus-IMERG-3B-V06_3hr_3x3_distcorr_threshold0.2.eps}}{\caption{BCC minus IMERG 3hr 3x3}}
+        \ffigbox[\FBwidth]{\includegraphics[width=.32\textwidth,angle=0]{./asop_coherence_global_spatial_FGOALS_3hr_3x3-minus-IMERG-3B-V06_3hr_3x3_distcorr_threshold0.2.eps}}{\caption{FGOALS minus IMERG 3hr 3x3}} \hspace{0.05in}
+        \ffigbox[\FBwidth]{\includegraphics[width=.32\textwidth,angle=0]{./asop_coherence_global_spatial_GISS_3hr_3x3-minus-IMERG-3B-V06_3hr_3x3_distcorr_threshold0.2.eps}}{\caption{GISS minus IMERG 3hr 3x3}} \hspace{0.05in}
+    \end{subfloatrow}}} \vspace{0.2in}
+    \ffigbox{}{\CommonHeightRow[.05\textheight]{\begin{subfloatrow}
+        \ffigbox[\FBwidth]{\includegraphics[width=.32\textwidth,angle=0]{./asop_coherence_global_spatial_MIROC_3hr_3x3-minus-IMERG-3B-V06_3hr_3x3_distcorr_threshold0.2.eps}}{\caption{MIROC minus IMERG 3hr 3x3}} \hspace{0.05in}
+        \ffigbox[\FBwidth]{\includegraphics[width=.32\textwidth,angle=0]{./asop_coherence_global_spatial_MPI-ESM_3hr_3x3-minus-IMERG-3B-V06_3hr_3x3_distcorr_threshold0.2.eps}}{\caption{MPI-ESM minus IMERG 3hr 3x3}} \hspace{0.05in}
+        \ffigbox[\FBwidth]{\includegraphics[width=.32\textwidth,angle=0]{./asop_coherence_global_spatial_SAM_3hr_3x3-minus-IMERG-3B-V06_3hr_3x3_distcorr_threshold0.2.eps}}{\caption{SAM minus IMERG 3hr 3x3}}
+        \hspace{0.05in}
+    \end{subfloatrow}}} \vspace{0.2in}
+\end{figure*}
+
+\end{document}
