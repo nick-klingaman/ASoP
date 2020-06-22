@@ -53,7 +53,7 @@ def parameters():
     return(max_box_distance,max_boxes,max_timesteps)
 
 def read_precip(model_dict):
-
+    from iris.util import reverse
     """
     Use iris to read precipitation data into a Cube.
     The area to read is controlled by the "region" element of the dataset dictionary (model_dict)
@@ -68,17 +68,15 @@ def read_precip(model_dict):
     """
 
     constraint = iris.Constraint(model_dict['constraint'],
-                                     latitude=lambda cell: model_dict['region'][0] <= cell <= model_dict['region'][1],
-                                     longitude=lambda cell: model_dict['region'][2] <= cell <= model_dict['region'][3])
+                                     latitude=lambda cell: model_dict['region'][0] <= cell <= model_dict['region'][1])
     precip = iris.load_cube(model_dict['infile'],constraint)*model_dict['scale_factor']
-    try:
+    precip = precip.intersection(longitude=(model_dict['region'][2],model_dict['region'][3]))
+    if not precip.coord('latitude').has_bounds():
         precip.coord('latitude').guess_bounds()
-    except:
-        pass
-    try:
+    if not precip.coord('longitude').has_bounds():
         precip.coord('longitude').guess_bounds()
-    except:
-        pass
+    if precip.coord('latitude').points[1]-precip.coord('latitude').points[0] < 0:
+        precip = reverse(precip,'latitude')
     return(precip)
 
 def compute_histogram(precip,bins):
@@ -140,26 +138,26 @@ def plot_histogram(oned_hist,twod_hist,model_dict,bins,title=True,colorbar=True)
     print('---> Plotting 2D histogram')
     nbins = np.size(oned_hist)
     hist_con_levs=[1e-5,2e-5,4e-5,7e-5,1e-4,2e-4,4e-4,7e-4,1e-3,2e-3,4e-3,7e-3,1e-2,2e-2,4e-2,7e-2,1e-1]
-    fig = plt.figure()
+    fig = plt.figure(figsize=(7,7))
     ax = fig.add_subplot(111)
     cmap = plt.cm.get_cmap("viridis_r")
     norm = BoundaryNorm(hist_con_levs,ncolors=cmap.N,clip=True)
     contour = ax.pcolormesh(np.arange(nbins+1),np.arange(nbins+1),twod_hist,cmap=cmap,norm=norm)
-    if colorbar == True:
+    if colorbar:
         cbar = fig.colorbar(contour,orientation='horizontal',ticks=hist_con_levs)
         cbar.ax.set_xlabel('Probability',fontsize=18)
         cbar.ax.set_xticklabels(['1e-5','2e-5','3e-5','4e-5','7e-5','1e-4','2e-4','4e-4','7e-4','1e-3','2e-3','4e-3','7e-3','1e-2','7e-2','1e-1'])
-    ax.set_xlabel('Precipitation at time t (mm day$^{-1}$)',fontsize=18)
-    ax.set_ylabel('Precipitation at time t+1 (mm day$^{-1}$)',fontsize=18)
+    ax.set_xlabel('Precipitation at time t (mm day$^{-1}$)',fontsize=16)
+    ax.set_ylabel('Precipitation at time t+1 (mm day$^{-1}$)',fontsize=16)
     ticklabels=['< '+str(bins[1])]
     for bin in range(1,nbins):
         ticklabels.append(str(bins[bin]))
     ticklabels.append(' > '+str(bins[nbins-1]))
-    ax.set_xticks(np.arange(nbins+1))
-    ax.set_xticklabels(ticklabels,fontsize=14)
+    ax.tick_params(axis='y')
+    plt.xticks(np.arange(nbins+1),ticklabels,rotation=30,fontsize=12)
     ax.set_yticks(np.arange(nbins+1))
-    ax.set_yticklabels(ticklabels,fontsize=14)
-    if title == True:
+    ax.set_yticklabels(ticklabels,fontsize=12)
+    if title:
         title_string = '2D histogram for '+model_dict['legend_name']
         if 'time_desc' in model_dict:
             title_string = title_string+' '+model_dict['time_desc']
@@ -175,10 +173,11 @@ def plot_histogram(oned_hist,twod_hist,model_dict,bins,title=True,colorbar=True)
     ax2.plot(np.arange(nbins)+0.5,oned_hist,'k--',marker='o',markersize=8)
     ax2.set_yscale('log',nonposy='clip')
     ax2.set_ylim(ymin=0.0009,ymax=1.0)
-    ax2.set_ylabel('Probability of precipitation in bin',fontsize=18)
+    ax2.tick_params(axis='y')
+    ax2.set_ylabel('Probability of precipitation in bin',fontsize=16)
     ax2.set_yticks([1e-3,1.4e-3,2e-3,3e-3,4.5e-3,7e-3,1e-2,1.4e-2,2e-2,3e-2,4.5e-2,7e-2,1e-1,1.4e-1,2e-1,3e-1,4.5e-1,7e-1,1])
     ax2.set_yticklabels(['1.0e-3','1.4e-3','2.0e-3','3.0e-3','4.5e-3','7.0e-3','1.0e-2','1.4e-2','2.0e-2','3.0e-2','4.5e-2',
-                         '7.0e-2','1.0e-1','1.4e-1','2.0e-1','3.0e-1','4.5e-1','7.0e-1','1.0e0'],fontsize=14)
+                         '7.0e-2','1.0e-1','1.4e-1','2.0e-1','3.0e-1','4.5e-1','7.0e-1','1.0e0'],fontsize=12)
     ax2.set_xlim(xmin=0,xmax=nbins)
     plot_name='asop_coherence.'+model_dict['name']
     if 'grid_type' in model_dict:
