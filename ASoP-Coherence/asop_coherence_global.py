@@ -1,52 +1,262 @@
-def get_asop_dict(key):
+def get_asop_dict(key,time=None,grid=''):
     from pathlib import Path
-    cmip6_path=Path('/media/nick/lacie_tb3/data_from_gill/CMIP6')
+#    cmip6_path=Path('/media/nick/lacie_tb3/data_from_gill/CMIP6')
+    cmip6_path=Path('/media/nick/lacie_tb3/cmip6')
     obs_path=Path('/media/nick/lacie_tb3/datasets')
     print(key)
-    if key == 'AWI_3hr_3x3':
+    if grid is not '':
+        grid_str=grid+'.'
+    else:   
+        grid_str=''
+    if key == 'AWI':
         asop_dict={
-            'desc': 'AWI-CM-1-1-MR_historical_r1i1p1f1_gn_3hr_3x3',
+            'desc': 'AWI-CM-1-1-MR_historical_r1i1p1f1_gn_'+time,
             'dir': cmip6_path/'AWI-CM-1-1-MR',
-            'file_pattern': 'pr_3hr*0.3x3.nc',
-            'name': 'AWI_3hr_3x3',
-            'start_year': 1990,
-            'stop_year': 2014,
-            'legend_name': 'AWI',
-            'region': [-60,60,0,360],
-        }
-    elif key == 'AWI_daily_3x3':
-        asop_dict={
-            'desc': 'AWI-CM-1-1-MR_historical_r1i1p1f1_gn_daily_3x3',
-            'dir': cmip6_path/'AWI-CM-1-1-MR',
-            'file_pattern': 'pr_3hr*.daily.3x3.nc',
-            'name': 'AWI_daily_3x3',
-            'start_year': 1990,
-            'stop_year': 2014,
-            'legend_name': 'AWI',
-            'region': [-60,60,0,360]
-        }
-    elif key == 'BCC_3hr_3x3':
-        asop_dict={
-            'dir': cmip6_path/'BCC-CSM2-MR',
-            'desc': 'BCC-CSM2-MR_historical_r1i1p1f1_gn_3hr_3x3',
-            'name': 'BCC_3hr_3x3',
-            'file_pattern': 'pr_3hr*0.3x3.nc',
+            'file_pattern': 'pr_'+time+'*0.'+grid_str+'nc',
+            'name': 'AWI_CM-1-1-MR_'+time,
             'start_year': 1980,
             'stop_year': 2014,
-            'legend_name': 'BCC',
+            'legend_name': 'AWI_'+time,
             'region': [-60,60,0,360]
         }
-    elif key == 'BCC_daily_3x3':
+    elif key == 'BCC':
         asop_dict={
             'dir': cmip6_path/'BCC-CSM2-MR',
-            'desc': 'BCC-CSM2-MR_historical_r1i1p1f1_gn_daily_3x3',
-            'name': 'BCC_daily_3x3',
-            'file_pattern': 'pr_3hr*.daily.3x3.nc',
+            'desc': 'BCC-CSM2-MR_historical_r1i1p1f1_gn_'+time,
+            'name': 'BCC-CSM2-MR_'+time,
+            'file_pattern': 'pr_'+time+'*1.'+grid_str+'nc',
             'start_year': 1980,
             'stop_year': 2014,
-            'legend_name': 'BCC',
+            'legend_name': 'BCC_'+time,
             'region': [-60,60,0,360]
         }
+    elif key == 'CanESM5':
+        asop_dict={
+            'dir': cmip6_path/'CanESM5',
+            'desc': 'CanESM5_historical_r1i1p1f1_gn_'+time,
+            'name': 'CanESM5_'+time,
+            'file_pattern': 'pr_'+time+'*1.'+grid_str+'nc',
+            'start_year': 1980,
+            'stop_year': 2014,
+            'legend_name': 'CanESM5_'+time,
+            'region': [-60,60,0,360]
+        }
+    elif key == 'ACCESS':
+        asop_dict={
+            'desc': 'ACCESS-CM2_historical_r1i1p1f1_gn_'+time,
+            'dir': cmip6_path/'ACCESS-CM2',
+            'name': 'ACCESS-CM2_'+time,
+            'file_pattern': 'pr_'+time+'*1.'+grid_str+'nc',
+            'start_year': 1980,
+            'stop_year': 2014,
+            'legend_name': 'ACCESS_'+time,
+            'region': [-60,60,0,360]
+        }
+    elif key == 'CESM2':
+        asop_dict={
+            'desc': 'CESM2_historical_r1i1p1f1_gn_'+time,
+            'dir': cmip6_path/'CESM2',
+            'name': 'CESM2_'+time,
+            'file_pattern': 'pr_'+time+'*1.'+grid_str+'nc',
+            'start_year': 1980,
+            'stop_year': 2014,
+            'legend_name': 'CESM2_'+time,
+            'region': [-60,60,0,360]
+        }
+    elif key == 'CMCC':
+        asop_dict={
+            'desc': 'CMCC-CM2-SR5_historical_r1i1p1f1_gn_'+time,
+            'dir': cmip6_path/'CMCC-CM2-SR5',
+            'name': 'CMCC-CM2-SR5_'+time,
+            'file_pattern': 'pr_'+time+'*1.'+grid_str+'nc',
+            'start_year': 1980,
+            'stop_year': 2014,
+            'legend_name': 'CMCC-CM2-SR5_'+time,
+            'region': [-60,60,0,360]
+        }
+    elif key == 'CNRM':
+        asop_dict={
+            'desc': 'CNRM-CM6-1-HR_historical_r1i1p1f1_gn_'+time,
+            'dir': cmip6_path/'CNRM-CM6-1-HR',
+            'name': 'CNRM-CM6-1-HR_'+time,
+            'file_pattern': 'pr_'+time+'*1.'+grid_str+'nc',
+            'start_year': 1980,
+            'stop_year': 2014,
+            'legend_name': 'CNRM-CM6-1-HR_'+time,
+            'region': [-60,60,0,360]
+        }
+    elif key == 'FGOALS':
+        asop_dict={
+            'desc': 'FGOALS-g3_historical_r1i1p1f1_gn_'+time,
+            'dir': cmip6_path/'FGOALS-g3',
+            'name': 'FGOALS-g3_'+time,
+            'file_pattern': 'pr_'+time+'*1.'+grid_str+'nc',
+            'start_year': 1980,
+            'stop_year': 2014,
+            'legend_name': 'FGOALS-g3_'+time,
+            'region': [-60,60,0,360]
+        }
+    elif key == 'GFDL':
+        asop_dict={
+            'desc': 'GFDL-CM4_historical_r1i1p1f1_gr1_'+time,
+            'dir': cmip6_path/'GFDL-CM4',
+            'name': 'GFDL-CM4_'+time,
+            'file_pattern': 'pr_'+time+'*_gr1_*1.'+grid_str+'nc',
+            'start_year': 1980,
+            'stop_year': 2014,
+            'legend_name': 'GFDL-CM4_'+time,
+            'region': [-60,60,0,360]
+        }
+    elif key == 'GISS':
+        asop_dict={
+            'dir': cmip6_path/'GISS-E2-1-G',
+            'name': 'GISS-E2-1-G_'+time,
+            'desc': 'GISS-E2-1-G_historical_r1i1p1f1_gn_'+time,
+            'file_pattern': 'pr_'+time+'*0.'+grid_str+'.nc',
+            'start_year': 1980,
+            'stop_year': 2014,
+            'legend_name': 'GISS-E2-1-G_'+time,
+            'region': [-60,60,0,360]
+        }
+    elif key == 'HadGEM3':
+        asop_dict={
+            'desc': 'HadGEM3-GC31-MM_historical_r1i1p1f3_gn_'+time,
+            'dir': cmip6_path/'HadGEM3-GC31-MM',
+            'name': 'HadGEM3-GC31-MM_'+time,
+            'file_pattern': 'pr_'+time+'*0.'+grid_str+'nc',
+            'start_year': 1980,
+            'stop_year': 2014,
+            'legend_name': 'HadGEM3-GC31-MM_'+time,
+            'region': [-60,60,0,360]
+        }
+    elif key == 'INM':
+        asop_dict={
+            'desc': 'INM-CM5-0_historical_r1i1p1f1_gr1_'+time,
+            'dir': cmip6_path/'INM-CM5',
+            'name': 'INM-CM-5-0_'+time,
+            'file_pattern': 'pr_'+time+'*1.'+grid_str+'nc',
+            'start_year': 1980,
+            'stop_year': 2014,
+            'legend_name': 'INM-CM5_'+time,
+            'region': [-60,60,0,360]
+        }
+    elif key == 'IPSL':
+        asop_dict={
+            'desc': 'IPSL-CM6A-LR_historical_r1i1p1f1_gr1_'+time,
+            'dir': cmip6_path/'IPSL-CM6A-LR',
+            'name': 'IPSL-CM6A-LR_'+time,
+            'file_pattern': 'pr_'+time+'*1.'+grid_str+'nc',
+            'start_year': 1980,
+            'stop_year': 2014,
+            'legend_name': 'IPSL-CM6A-LR_'+time,
+            'region': [-60,60,0,360]
+        }
+    elif key == 'KACE':
+        asop_dict={
+            'desc': 'KACE-1-0-G_historical_r1i1p1f1_gr_'+time,
+            'dir': cmip6_path/'KACE-1-0-G',
+            'name': 'KACE-1-0-G_'+time,
+            'file_pattern': 'pr_'+time+'*0.'+grid_str+'nc',
+            'start_year': 1980,
+            'stop_year': 2014,
+            'legend_name': 'KACE-1-0-G_'+time,
+            'region': [-60,60,0,360]
+        }
+    elif key == 'MIROC':
+        asop_dict={
+            'dir': cmip6_path/'MIROC6',
+            'name': 'MIROC6_'+time,
+            'desc': 'MIROC6_historical_r1i1p1f1_gn_'+time,
+            'file_pattern': 'pr_'+time+'*1.nc',
+            'start_year': 1980,
+            'stop_year': 2014,
+            'legend_name': 'MIROC6_'+time,
+            'region': [-60,60,0,360]
+        }
+    elif key == 'MPI':
+        asop_dict={
+            'dir': cmip6_path/'MPI-ESM1-2-HR',
+            'name': 'MPI-ESM1-2-HR_'+time,
+            'desc': 'MPI-ESM1-2-HR_historical_r1i1p1f1_gn_'+time,
+            'file_pattern': 'pr_'+time+'*1.nc',
+            'start_year': 1980,
+            'stop_year': 2014,
+            'legend_name': 'MPI-ESM1-2-HR_'+time,
+            'region': [-60,60,0,360]
+        }
+    elif key == 'MRI':
+        asop_dict={
+            'dir': cmip6_path/'MRI-ESM2-0',
+            'name': 'MRI-ESM2-0_'+time,
+            'desc': 'MPI-ESM2-0_historical_r1i1p1f1_gn_'+time,
+            'file_pattern': 'pr_'+time+'*1.nc',
+            'start_year': 1980,
+            'stop_year': 2014,
+            'legend_name': 'MRI-ESM2-0_'+time,
+            'region': [-60,60,0,360]
+        }
+    elif key == 'NESM':
+        asop_dict={
+            'dir': cmip6_path/'NESM3',
+            'name': 'NESM3_'+time,
+            'desc': 'NESM3_historical_r1i1p1f1_gn_'+time,
+            'file_pattern': 'pr_'+time+'*1.nc',
+            'start_year': 1980,
+            'stop_year': 2014,
+            'legend_name': 'NESM3_'+time,
+            'region': [-60,60,0,360]
+        }
+    elif key == 'NorESM':
+        asop_dict={
+            'dir': cmip6_path/'NorESM2-MM',
+            'name': 'NorESM2-MM_'+time,
+            'desc': 'NorESM2-MM_historical_r1i1p1f1_gn_'+time,
+            'file_pattern': 'pr_'+time+'*1.nc',
+            'start_year': 1980,
+            'stop_year': 2014,
+            'legend_name': 'NorESM2-MM_'+time,
+            'region': [-60,60,0,360]
+        }
+    elif key == 'SAM0-UNICON':
+        asop_dict={
+            'dir': cmip6_path/'SAM0-UNICON',
+            'name': 'SAM_'+time,
+            'desc': 'SAM0-UNICON_historical_r1i1p1f1_gn_'+time,
+            'file_pattern': 'pr_'+time+'*1.nc',
+            'start_year': 1980,
+            'stop_year': 2014,
+            'legend_name': 'SAM0-UNICON_'+time,
+            'region': [-60,60,0,360]
+        }
+    elif key == 'TaiESM':
+        asop_dict={
+            'dir': cmip6_path/'TaiESM1',
+            'name': 'TaiESM1_'+time,
+            'desc': 'TaiESM1_historical_r1i1p1f1_gn_'+time,
+            'file_pattern': 'pr_'+time+'*1.nc',
+            'start_year': 1980,
+            'stop_year': 2014,
+            'legend_name': 'TaiESM1_'+time,
+            'region': [-60,60,0,360]
+        }
+    elif key == 'UKESM1':
+        asop_dict={
+            'dir': cmip6_path/'UKESM1-0-LL',
+            'name': 'UKESM1-0-LL_'+time,
+            'desc': 'UKESM1-0-LL_historical_r1i1p1f2_gn_'+time,
+            'file_pattern': 'pr_'+time+'*0.nc',
+            'start_year': 1980,
+            'stop_year': 2014,
+            'legend_name': 'UKESM1-0-LL_'+time,
+            'region': [-60,60,0,360]
+        }
+    else:
+        raise Exception('No dictionary for '+key)
+    if grid is not '':
+        asop_dict['desc'] = asop_dict['desc']+'_'+grid
+        asop_dict['name'] = asop_dict['name']+'_'+grid
+    return(asop_dict)
+    '''
     elif key == 'GPM_IMERG_daily_3x3':
         asop_dict={
             'desc': '3B-DAY.MS.MRG.3IMERG.3x3',
@@ -112,17 +322,6 @@ def get_asop_dict(key):
             'stop_year': 2018,
             'legend_name': 'IMERG',
             'region': [-60,60,0,360]
-        }
-    elif key == 'ACCESS_3hr_3x3':
-        asop_dict={
-            'desc': 'ACCESS-CM2_historical_r1i1p1f1_gn_3hr_3x3',
-            'dir': cmip6_path/'ACCESS-CM2',
-            'name': 'ACCESS_3hr_3x3',
-            'file_pattern': 'pr_3hr*0.3x3.nc',
-            'start_year': 1990,
-            'stop_year': 2014,
-            'legend_name': 'ACCESS',
-            'region': [-60,60,0,360],
         }
     elif key == 'ACCESS_daily_3x3':
         asop_dict={
@@ -245,9 +444,7 @@ def get_asop_dict(key):
             'legend_name': 'SAM',
             'region': [-60,60,0,360]
         }
-    else:
-        raise Exception('No dictionary for '+key)
-    return(asop_dict)
+    '''
 
 def load_cmip6(asop_dict):
     import iris
@@ -257,6 +454,7 @@ def load_cmip6(asop_dict):
 
     constraint = iris.Constraint(time = lambda cell: PartialDateTime(year=asop_dict['start_year']) <= cell <= PartialDateTime(year=asop_dict['stop_year']),latitude = lambda cell: -60 <= cell <= 60)
     cubelist = iris.load(str(asop_dict['dir'])+'/'+asop_dict['file_pattern']) # Use NetCDF3 data to save compute time
+    print(cubelist)
     unify_time_units(cubelist)
     equalise_attributes(cubelist)
     cube = cubelist.concatenate_cube()
@@ -298,12 +496,8 @@ def mask_wet_season(precip,wet_season_threshold=1.0/24.0):
     masked_precip = precip.copy(data=(ma.array(precip.data,mask=precip_mask.data)))
     return(masked_precip)
 
-def mask_min_precip(precip,min_precip_threshold=1.0):
-    import numpy.ma as ma
-    import numpy as np
+def conform_precip_threshold(precip,threshold):
     from cfunits import Units
-    import iris
-
     if precip.units == 'mm/hr':
         input_units = 'mm/h'
     elif precip.units == 'kg m-2 s-1':
@@ -313,9 +507,17 @@ def mask_min_precip(precip,min_precip_threshold=1.0):
     else:
         input_units = precip.units
     if input_units == 'mm/day':
-        threshold_units = min_precip_threshold
+        threshold_units = threshold
     else:
-        threshold_units = Units.conform(min_precip_threshold,Units('mm/day'),Units(input_units)) #precip.units)
+        threshold_units = Units.conform(threshold,Units('mm/day'),Units(input_units)) #precip.units)
+    return(threshold_units)
+
+def mask_min_precip(precip,min_precip_threshold=1.0):
+    import numpy.ma as ma
+    import numpy as np
+    import iris
+
+    threshold_units = conform_precip_threshold(precip,min_precip_threshold)
     nt = len(precip.coord('time').points)
     nlon = len(precip.coord('longitude').points)
     nlat = len(precip.coord('latitude').points)
@@ -337,7 +539,7 @@ def compute_autocorr_grid(precip,lag):
     output = istats.pearsonr(precip,lagged_slice,corr_coords='time')
     return(output.data)
 
-def compute_temporal_autocorr(precip,max_lag):
+def compute_temporal_autocorr(precip,max_lag,min_precip_threshold=1):
     import numpy.ma as ma
     import numpy as np
     import iris.coord_categorisation
@@ -348,6 +550,8 @@ def compute_temporal_autocorr(precip,max_lag):
         iris.coord_categorisation.add_month_number(precip,'time')
     if not 'year' in [coord.name() for coord in precip.coords()]:
         iris.coord_categorisation.add_year(precip,'time')
+    threshold_units = conform_precip_threshold(precip,min_precip_threshold)
+
     lon_coord = precip.coord('longitude')
     lat_coord = precip.coord('latitude')
     nlon = len(lon_coord.points)
@@ -361,6 +565,11 @@ def compute_temporal_autocorr(precip,max_lag):
     temporal_autocorr = temporal_autocorr.copy(data=temporal_autocorr.data.fill(np.nan)) #temporal_autocorr.data[:,:,:,:].fill(np.nan)
     temporal_autocorr.var_name='autocorr_wetseason_precip'
     temporal_autocorr.long_name='Auto-correlation of precipitation masked for the wet season'
+
+    precip_weights = iris.cube.Cube(data=np.empty((nmonths,nlat,nlon)),dim_coords_and_dims=[(month_coord,0),(lat_coord,1),(lon_coord,2)])
+    precip_weights.var_name='precip_weights'
+    precip_weights.long_name='Weights for computing mean metric over wet season (count of precip values above '+str(min_precip_threshold)+' mm/day'
+
     for m,month in enumerate(months):
         dask_autocorr = []
         print('-->-->--> Month '+str(month))
@@ -377,11 +586,15 @@ def compute_temporal_autocorr(precip,max_lag):
         result[np.where(result == 0.0)].mask = True
         result[np.where(result == 0.0)] = np.nan
         temporal_autocorr.data[m,:,:,:] = np.nanmean(result[:,:,:,:],axis=0)
+        # Compute number of valid precipitation data points (> 1 mm/day)
+        precip_weights.data[m,:,:] = this_month.collapsed('time',iris.analysis.COUNT,function=lambda values: values >= threshold_units).data
+    temporal_autocorr_masked = temporal_autocorr.copy(data=np.ma.masked_array(temporal_autocorr.data,np.isnan(temporal_autocorr.data)))
     temporal_autocorr_mean = temporal_autocorr.collapsed('month_number',iris.analysis.MEAN,mdtol=0)
     temporal_autocorr_mean.var_name='autocorr_wetseason_precip_mean'
-    temporal_autocorr_mean.long_name='Auto-correlation of precipitation masked for the wet season (mean of all months in wet season)'
-    temporal_autocorr_mean.data = np.nanmean(temporal_autocorr.data,axis=0)
-    out_cubelist = [temporal_autocorr,temporal_autocorr_mean]
+    temporal_autocorr_mean.long_name='Auto-correlation of precipitation masked for the wet season (weighted mean of all months in wet season)'
+    for lag in range(max_lag):
+        temporal_autocorr_mean.data[lag,:,:] = np.ma.average(temporal_autocorr_masked.data[:,lag,:,:],axis=0,weights=precip_weights.data)
+    out_cubelist = [temporal_autocorr,temporal_autocorr_mean,precip_weights]
     return(out_cubelist)
 
 def compute_temporal_summary(precip,ndivs):
@@ -553,7 +766,7 @@ def extract_mask_region(precip,centre_lat,centre_lon,dist_min,dist_max):
     ntime=len(time.points)
     pt_dist = np.ones((nlat,nlon))
     dN = 0 ; dS = 0 ; dlon = 0 
-    print(centre_lat,centre_lon)
+#    print(centre_lat,centre_lon)
     for yy,target_lat in enumerate(latitude.points):
         for xx,target_lon in enumerate(longitude.points):
             pt_dist[yy,xx] = haversine((centre_lat,centre_lon),(target_lat,target_lon))
