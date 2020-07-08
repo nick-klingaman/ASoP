@@ -20,13 +20,15 @@ if __name__ == '__main__':
     parser.add_argument('-t',dest='time',help='Frequency to process (eg 3hr, day)')
     parser.add_argument('-n',dest='grid',help='Grid spacing to process (in degrees, eg 2x2)')
     parser.add_argument('-o',dest='overwrite',action='store_true',default=False,required=False)
+    parser.add_argument('-w',dest='workers',default=12,required=False,help='Number of workers (processes)')
     args = parser.parse_args()
     model = args.model
     timetype = args.time
     grid = args.grid
+    workers = int(args.workers)
     masked_overwrite = args.overwrite
 
-    client = Client()
+    client = Client(n_workers=workers)
     wet_season_threshold = 1.0/24.0
     wet_season_threshold_str='1d24'
     min_precip_threshold = 1.0 # mm/day
@@ -69,7 +71,7 @@ if __name__ == '__main__':
         with dask.config.set(scheduler='synchronous'):
             iris.save(masked_min_precip,masked_min_precip_file)
     print('-->--> Computing temporal autocorrelation metrics')
-    temporal_autocorr = asop_global.compute_temporal_autocorr(masked_min_precip,17)
+    temporal_autocorr = asop_global.compute_temporal_autocorr(masked_min_precip,range(17))
     print('-->--> Computing temporal summary metrics')
     temporal_summary = asop_global.compute_temporal_summary(masked_min_precip,4)
     with dask.config.set(scheduler='synchronous'):
