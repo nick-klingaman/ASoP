@@ -788,16 +788,6 @@ def compute_spatial_summary(precip,ndivs,min_precip_threshold=1):
     out_cubelist = [space_inter,onon_freq,onoff_freq,offon_freq,offoff_freq,lower_thresh,upper_thresh,space_inter_mean,onon_freq_mean,onoff_freq_mean,offon_freq_mean,offoff_freq_mean,precip_weights]
     return(out_cubelist)
 
-'''
-def compute_gridcorr_grid(precip,grid):
-    import iris
-    import iris.analysis.stats as istats
-    corr_map = istats.pearsonr(precip,grid,corr_coords='time')
-    weights = iris.analysis.cartography.area_weights(corr_map)
-    output=corr_map.collapsed(['longitude','latitude'],iris.analysis.MEAN,weights=weights)
-    return(output.data)
-'''
-
 def compute_spatial_onoff_metric_grid(precip,lower_thresh,upper_thresh,cyclic=True):
     import numpy as np
     import dask
