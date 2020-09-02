@@ -189,6 +189,35 @@ def plot_histogram(oned_hist,twod_hist,model_dict,bins,title=True,colorbar=True)
     plot_name=plot_name+'_precip_twodpdf.ps'
     plt.savefig(plot_name,bbox_inches='tight')
 
+def haversine(origin, destination):
+
+    """
+    Compute distance between two gridpoints in km.
+
+    Method: Haversine function
+
+    Arguments:
+    * origin: Tuple of (latitude,longitude) for origin point
+    * destination: Tuple of (latitude, longitude) for destination point
+
+    Returns:
+    * d: distance between origin and destination in km
+    """
+
+    import math
+
+    lat1, lon1 = origin
+    lat2, lon2 = destination
+    radius = 6371 # km
+
+    dlat = math.radians(lat2-lat1)
+    dlon = math.radians(lon2-lon1)
+    a = math.sin(dlat/2) * math.sin(dlat/2) + math.cos(math.radians(lat1)) \
+        * math.cos(math.radians(lat2)) * math.sin(dlon/2) * math.sin(dlon/2)
+    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1-a))
+    d = radius * c
+    return d
+
 def compute_equalgrid_corr(precip,model_dict):
 
     """
@@ -236,14 +265,16 @@ def compute_equalgrid_corr(precip,model_dict):
     lag_length = model_dict['lag_length']
     region_size = model_dict['region_size']
     print('---> Computing correlations for '+str(region_size)+'x'+str(region_size)+' sub-regions')
-    nlon=len(precip.coord('longitude').points)
-    nlat=len(precip.coord('latitude').points)
+    latitude = precip.coord('latitude').points
+    longitude = precip.coord('longitude').points
+    nlon=len(longitude)
+    nlat=len(latitude)
     print('----> Info: Size of domain in native gridpoints: '+str(nlon)+' longitude x '+str(nlat)+' latitude.')
     nregions=0
     npts=np.zeros((lag_length,region_size),dtype=np.int32)
     npts_map=np.zeros((lag_length,region_size,region_size),dtype=np.int32)
-    distance_x=np.zeros(region_size)
-    distance_y=np.zeros(region_size)
+#    distance_x=np.zeros(region_size)
+#    distance_y=np.zeros(region_size)
     corr_map=np.zeros((lag_length,region_size,region_size))
     lag_vs_distance=np.zeros((lag_length,region_size))
     autocorr=np.zeros((lag_length))
@@ -252,38 +283,43 @@ def compute_equalgrid_corr(precip,model_dict):
         for region_ystart in range(0,nlat-region_size+1,region_size):
             region_ycentre = region_ystart+region_size//2
             central_precip = precip[:,region_ycentre,region_xcentre]
+#            for region_x in range(region_size):
+#                distance_x[region_x]=np.abs(region_xstart+region_x-region_xcentre)
+#            for region_y in range(region_size):
+#                distance_y[region_y]=np.abs(region_ystart+region_y-region_ycentre)*model_dict['dy']/float(model_dict['dx'])
+            print(region_xstart,region_ystart)
             for region_x in range(region_size):
-                distance_x[region_x]=np.abs(region_xstart+region_x-region_xcentre)
-            for region_y in range(region_size):
-                distance_y[region_y]=np.abs(region_ystart+region_y-region_ycentre)*model_dict['dy']/float(model_dict['dx'])
-            for region_x in range(region_size):
-                for region_y in range(region_size): 
-                    distance=np.int(round(np.sqrt(distance_x[region_x]*distance_x[region_x]+distance_y[region_y]*distance_y[region_y])))-1
-                    remote_precip=precip[:,region_y+region_ystart,region_x+region_xstart]
-                    corr = np.corrcoef([central_precip.data,remote_precip.data])[1,0]
-                    if not np.isnan(corr):
-                        corr_map[0,region_y,region_x]=corr+corr_map[0,region_y,region_x]
-                        npts_map[0,region_y,region_x]=npts_map[0,region_y,region_x]+1
-                    if (region_x + region_xstart == region_xcentre) and (region_y + region_ystart == region_ycentre):
-                        autocorr[0]=autocorr[0]+1
-                        for lag in range(1,lag_length):
-                            corr = np.corrcoef(central_precip.data,np.roll(central_precip.data,lag,0))[1,0]
-                            if not np.isnan(corr):
-                                corr_map[lag,region_y,region_x]=corr+corr_map[lag,region_y,region_x]
-                                npts_map[lag,region_y,region_x]=npts_map[lag,region_y,region_x]+1
-                                autocorr[lag]=corr+autocorr[lag]
-                                npts[lag,0]=npts[lag,0]+1
-                    else:
+                for region_y in range(region_size):
+#                    distance=np.int(round(np.sqrt(distance_x[region_x]*distance_x[region_x]+distance_y[region_y]*distance_y[region_y])))-1
+                    km_distance = haversine((latitude[region_ycentre],longitude[region_xcentre]),(latitude[region_ystart+region_y],longitude[region_xstart+region_x]))
+                    distance = np.int(round(km_distance/model_dict['dx']))-1
+                    print(km_distance,distance,model_dict['dx'])
+                    if distance < region_size:
+                        remote_precip=precip[:,region_y+region_ystart,region_x+region_xstart]
+                        corr = np.corrcoef([central_precip.data,remote_precip.data])[1,0]
                         if not np.isnan(corr):
-                            lag_vs_distance[0,distance]=lag_vs_distance[0,distance]+corr
-                            npts[0,distance]=npts[0,distance]+1
-                        for lag in range(1,lag_length):
-                            corr = np.corrcoef([central_precip.data,np.roll(remote_precip.data,lag,0)])[1,0]
+                            corr_map[0,region_y,region_x]=corr+corr_map[0,region_y,region_x]
+                            npts_map[0,region_y,region_x]=npts_map[0,region_y,region_x]+1
+                        if (region_x + region_xstart == region_xcentre) and (region_y + region_ystart == region_ycentre):
+                            autocorr[0]=autocorr[0]+1
+                            for lag in range(1,lag_length):
+                                corr = np.corrcoef(central_precip.data,np.roll(central_precip.data,lag,0))[1,0]
+                                if not np.isnan(corr):
+                                    corr_map[lag,region_y,region_x]=corr+corr_map[lag,region_y,region_x]
+                                    npts_map[lag,region_y,region_x]=npts_map[lag,region_y,region_x]+1
+                                    autocorr[lag]=corr+autocorr[lag]
+                                    npts[lag,0]=npts[lag,0]+1
+                        else:
                             if not np.isnan(corr):
-                                corr_map[lag,region_y,region_x] = corr+corr_map[lag,region_y,region_x]
-                                npts_map[lag,region_y,region_x] = npts_map[lag,region_y,region_x]+1
-                                lag_vs_distance[lag,distance] = corr+lag_vs_distance[lag,distance]
-                                npts[lag,distance]=npts[lag,distance]+1
+                                lag_vs_distance[0,distance]=lag_vs_distance[0,distance]+corr
+                                npts[0,distance]=npts[0,distance]+1
+                            for lag in range(1,lag_length):
+                                corr = np.corrcoef([central_precip.data,np.roll(remote_precip.data,lag,0)])[1,0]
+                                if not np.isnan(corr):
+                                    corr_map[lag,region_y,region_x] = corr+corr_map[lag,region_y,region_x]
+                                    npts_map[lag,region_y,region_x] = npts_map[lag,region_y,region_x]+1
+                                    lag_vs_distance[lag,distance] = corr+lag_vs_distance[lag,distance]
+                                    npts[lag,distance]=npts[lag,distance]+1
             nregions = nregions+1
     corr_map = corr_map/npts_map
     print('----> Info: There are '+str(nregions)+' '+str(region_size)+'x'+str(region_size)+' sub-regions in your input data.')
@@ -378,15 +414,15 @@ def plot_equalgrid_corr(corr_map,lag_vs_distance,autocorr,npts,model_dict,title=
             cfp.con(f=corr_map[lag,:,:],x=np.arange(region_size)+0.5,y=np.arange(region_size)+0.5,blockfill=1,
                     lines=False,line_labels=False,ptype=0,colorbar=1,colorbar_title='Correlation with (0,0) at lag 0, mean over all sub-regions',
                     title=title_string, colorbar_text_up_down=True,
-                    xlabel='$\Delta$x (approximately '+str(model_dict['dx'])+' km)',
-                    ylabel='$\Delta$y (approximately '+str(model_dict['dy'])+' km)',
+                    xlabel=r'$\Delta$x (approximately '+str(model_dict['dx'])+' km)',
+                    ylabel=r'$\Delta$y (approximately '+str(model_dict['dy'])+' km)',
                     xticks=np.arange(region_size)+0.5,yticks=np.arange(region_size)+0.5,
                     xticklabels=np.arange(region_size)-region_size//2,yticklabels=np.arange(region_size)-region_size//2)
         else:
             cfp.con(f=corr_map[lag,:,:],x=np.arange(region_size)+0.5,y=np.arange(region_size)+0.5,blockfill=1,
                     lines=False,line_labels=False,ptype=0,colorbar=0,title=title_string, 
-                    xlabel='$\Delta$x (approximately '+str(model_dict['dx'])+' km)',
-                    ylabel='$\Delta$y (approximately '+str(model_dict['dy'])+' km)',
+                    xlabel=r'$\Delta$x (approximately '+str(model_dict['dx'])+' km)',
+                    ylabel=r'$\Delta$y (approximately '+str(model_dict['dy'])+' km)',
                     xticks=np.arange(region_size)+0.5,yticks=np.arange(region_size)+0.5,
                     xticklabels=np.arange(region_size)-region_size//2,yticklabels=np.arange(region_size)-region_size//2)
         for region_x in range(region_size):
@@ -429,7 +465,8 @@ def plot_equalgrid_corr(corr_map,lag_vs_distance,autocorr,npts,model_dict,title=
     xtickvals=np.arange(max_dist+1)+2.0
     xtickvals=np.insert(xtickvals,0,[0.5,1.0])
     cfp.axes(xticks=xtickvals,yticks=np.arange(lag_length)+0.5,xticklabels=ticklabels,yticklabels=np.arange(lag_length),
-             xlabel='$\Delta$x bins ($\Delta$x approximately '+str(model_dict['dx'])+' km at the equator)',ylabel='Lag')
+             xlabel=r'$\Delta$x bins ($\Delta$x approximately '+str(model_dict['dx'])+' km at the equator)',
+             ylabel='Lag')
 
     if title == True:
         title_string = 'Correlation map for '+model_dict['legend_name']
@@ -508,14 +545,15 @@ def compute_equalarea_corr(precip,model_dict):
 
 
     print('---> Computing correlations for '+str(model_dict['box_size'])+'x'+str(model_dict['box_size'])+' km sub-boxes.')
+    longitude = precip.coord('longitude').points
     nlon=len(precip.coord('longitude').points)
     latitude = precip.coord('latitude').points
     nlat=len(latitude)
     max_box_distance,max_boxes,max_timesteps = parameters()
     box_length_x = np.int(model_dict['box_size']//model_dict['dx'])
     box_length_y = np.int(model_dict['box_size']//model_dict['dy'])
-    distance_x = np.zeros(box_length_x)
-    distance_y = np.zeros(box_length_y)
+#    distance_x = np.zeros(box_length_x)
+#    distance_y = np.zeros(box_length_y)
     nboxes=0
     autocorr=0
     npts=np.zeros(max_box_distance,dtype=np.int32)
@@ -529,22 +567,25 @@ def compute_equalarea_corr(precip,model_dict):
         for box_ystart in range(0,nlat+1-box_length_y,box_length_y):
             box_ycentre = box_ystart+box_length_y//2
             central_precip = precip[:,box_ycentre,box_xcentre]
-            for box_x in range(box_length_x):
-                distance_x[box_x]=np.abs(box_xstart+box_x-box_xcentre)*np.cos(latitude[box_ycentre]*np.pi/180.)
-            for box_y in range(box_length_y):
-                distance_y[box_y]=np.abs(box_ystart+box_y-box_ycentre)*model_dict['dy']/float(model_dict['dx'])
+ #           for box_x in range(box_length_x):
+ #               distance_x[box_x]=np.abs(box_xstart+box_x-box_xcentre)*np.cos(latitude[box_ycentre]*np.pi/180.)
+ #           for box_y in range(box_length_y):
+ #               distance_y[box_y]=np.abs(box_ystart+box_y-box_ycentre)*model_dict['dy']/float(model_dict['dx'])
             for box_x in range(box_length_x):
                 for box_y in range(box_length_y):
-                    distance=np.int(round(np.sqrt(distance_x[box_x]*distance_x[box_x]+distance_y[box_y]*distance_y[box_y])))
-                    km_distance=np.sqrt(distance_x[box_x]*distance_x[box_x]+distance_y[box_y]*distance_y[box_y])*model_dict['dx']
-                    distance_lists[distance,npts[distance]]=km_distance
-                    remote_precip=precip[:,box_y+box_ystart,box_x+box_xstart]
-                    if (box_x + box_xstart == box_xcentre) and (box_y + box_ystart == box_ycentre):
-                        autocorr=autocorr+1
-                    corr=np.corrcoef([central_precip.data,remote_precip.data])[1,0]
-                    if not np.isnan(corr):
-                        distance_correlations[distance]=distance_correlations[distance]+corr
-                        npts[distance]=npts[distance]+1
+                    #distance=np.int(round(np.sqrt(distance_x[box_x]*distance_x[box_x]+distance_y[box_y]*distance_y[box_y])))
+#                   km_distance=np.sqrt(distance_x[box_x]*distance_x[box_x]+distance_y[box_y]*distance_y[box_y])*model_dict['dx']
+                    km_distance = haversine((latitude[box_ycentre],longitude[box_xcentre]),(latitude[box_ystart+box_y],longitude[box_xstart+box_x]))
+                    if km_distance < model_dict['box_size']:
+                        distance = np.int(round(km_distance/model_dict['dx']))-1
+                        distance_lists[distance,npts[distance]]=km_distance
+                        remote_precip=precip[:,box_y+box_ystart,box_x+box_xstart]
+                        if (box_x + box_xstart == box_xcentre) and (box_y + box_ystart == box_ycentre):
+                            autocorr=autocorr+1
+                        corr=np.corrcoef([central_precip.data,remote_precip.data])[1,0]
+                        if not np.isnan(corr):
+                            distance_correlations[distance]=distance_correlations[distance]+corr
+                            npts[distance]=npts[distance]+1
             nboxes = nboxes+1
             if nboxes >= max_boxes :
                 raise Exception('ERROR: Number of sub-boxes ('+str(nboxes)+') exceeds maximum number of sub-boxes ('+str(max_boxes)+') exceeded.  Increase size of sub-boxes (-b option) or increase parameter max_boxes in code.')
