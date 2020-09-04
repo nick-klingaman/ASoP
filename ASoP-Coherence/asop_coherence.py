@@ -146,7 +146,7 @@ def plot_histogram(oned_hist,twod_hist,model_dict,bins,title=True,colorbar=True)
     if colorbar:
         cbar = fig.colorbar(contour,orientation='horizontal',ticks=hist_con_levs)
         cbar.ax.set_xlabel('Probability',fontsize=18)
-        cbar.ax.set_xticklabels(['1e-5','2e-5','3e-5','4e-5','7e-5','1e-4','2e-4','4e-4','7e-4','1e-3','2e-3','4e-3','7e-3','1e-2','7e-2','1e-1'])
+        cbar.ax.set_xticklabels(['1e-5','2e-5','4e-5','7e-5','1e-4','2e-4','4e-4','7e-4','1e-3','2e-3','4e-3','7e-3','1e-2','2e-2','4e-2','7e-2','1e-1'])
     ax.set_xlabel('Precipitation at time t (mm day$^{-1}$)',fontsize=16)
     ax.set_ylabel('Precipitation at time t+1 (mm day$^{-1}$)',fontsize=16)
     ticklabels=['< '+str(bins[1])]
@@ -287,13 +287,11 @@ def compute_equalgrid_corr(precip,model_dict):
 #                distance_x[region_x]=np.abs(region_xstart+region_x-region_xcentre)
 #            for region_y in range(region_size):
 #                distance_y[region_y]=np.abs(region_ystart+region_y-region_ycentre)*model_dict['dy']/float(model_dict['dx'])
-            print(region_xstart,region_ystart)
             for region_x in range(region_size):
                 for region_y in range(region_size):
 #                    distance=np.int(round(np.sqrt(distance_x[region_x]*distance_x[region_x]+distance_y[region_y]*distance_y[region_y])))-1
                     km_distance = haversine((latitude[region_ycentre],longitude[region_xcentre]),(latitude[region_ystart+region_y],longitude[region_xstart+region_x]))
                     distance = np.int(round(km_distance/model_dict['dx']))-1
-                    print(km_distance,distance,model_dict['dx'])
                     if distance < region_size:
                         remote_precip=precip[:,region_y+region_ystart,region_x+region_xstart]
                         corr = np.corrcoef([central_precip.data,remote_precip.data])[1,0]
@@ -517,12 +515,10 @@ def compute_equalarea_corr(precip,model_dict):
     central point, using bins delta_x wide starting from 0.5*delta_x.  Correlations are averaged
     within the bin and across all sub-regions.
 
+    As of vn1.0.2, distances are computed by a Haversine function rather than by using the user-
+    specified dx and dy keys in model_dict.
+
     Limitations:
-
-    * The physical distance in the x direction is computed using the latitude of the point at the centre
-    of the box.  This is not entirely accurate, but likely accurate enough for these purposes
-    (comparing correlations over 10s or 100s of km).
-
     * The number of distance bins is limited to max_box_distance, defined in the "parameters" function above.
 
     Arguments:
@@ -577,7 +573,7 @@ def compute_equalarea_corr(precip,model_dict):
 #                   km_distance=np.sqrt(distance_x[box_x]*distance_x[box_x]+distance_y[box_y]*distance_y[box_y])*model_dict['dx']
                     km_distance = haversine((latitude[box_ycentre],longitude[box_xcentre]),(latitude[box_ystart+box_y],longitude[box_xstart+box_x]))
                     if km_distance < model_dict['box_size']:
-                        distance = np.int(round(km_distance/model_dict['dx']))-1
+                        distance = np.int(round(km_distance/model_dict['dx']))
                         distance_lists[distance,npts[distance]]=km_distance
                         remote_precip=precip[:,box_y+box_ystart,box_x+box_xstart]
                         if (box_x + box_xstart == box_xcentre) and (box_y + box_ystart == box_ycentre):
@@ -598,6 +594,7 @@ def compute_equalarea_corr(precip,model_dict):
             distance_max=dist
         else:
             distance_correlations[dist]=-999
+    print(npts)
     print('---> Info: There are '+str(nboxes)+' sub-boxes in your input data.')
     return(distance_correlations,distance_ranges,distance_max)
 
