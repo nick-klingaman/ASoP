@@ -12,8 +12,6 @@ import os
 import asop_coherence_global as asop_global
 import argparse
 
-
-
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
@@ -82,9 +80,9 @@ if __name__ == '__main__':
             iris.save(haversine_map,haversine_file)
 
     print('-->--> Computing spatial summary metrics')
-    spatial_summary = asop_global.compute_spatial_summary(masked_min_precip,4)
+#    spatial_summary = asop_global.compute_spatial_summary(masked_min_precip,4)
     print('-->--> Computing spatial correlation metrics')
-    spatial_corr = asop_global.compute_equalgrid_corr_global(masked_min_precip,haversine_map,[0,400,600,800,1000,1200])
+    spatial_corr = asop_global.compute_equalgrid_corr_global(masked_min_precip,haversine_map,[0,250,450,650,850,1050])
     with dask.config.set(scheduler='synchronous'):
-        iris.save(spatial_summary,spatial_summary_file)
+#        iris.save(spatial_summary,spatial_summary_file)
         iris.save(spatial_corr,spatial_corr_file)

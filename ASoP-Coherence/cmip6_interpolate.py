@@ -1,9 +1,10 @@
 import iris
+from iris.time import PartialDateTime
 from pathlib import Path
 import glob
 import os
 import numpy as np
-import asop_coherence_global as asop_global
+import cmip6_dict as c6
 import argparse
 
 def interp_nxn(cube,n):
@@ -34,25 +35,37 @@ def avg_daily(cube):
     return(daily_cube)
 
 parser = argparse.ArgumentParser()
-parser.add_argument('-m',dest='model',help='Model to process (eg AWI)')
+parser.add_argument('-m',dest='model',help='Model to process (eg AWI)',required=False,default=None)
+parser.add_argument('-s',dest='model_set',help='Set of models to process (see cmip6_dict.py)',required=False,default=None)
 parser.add_argument('-t',dest='time',help='Frequency to process (eg 3hr, day)')
 parser.add_argument('-n',dest='grid',help='Grid spacing to which to interpolate (in degrees, eg 2 for 2x2')
 parser.add_argument('-o',dest='overwrite',action='store_true',default=False,required=False)
 args = parser.parse_args()
 model = args.model
+model_set = args.model_set
+if model_set is None and model is None:
+    raise Exception("You must specify at least a model (-m) or model set (-s)")
 timetype = args.time
 overwrite = args.overwrite
 gridn = args.grid
 
-print('--> '+model)
-asop_dict = asop_global.get_asop_dict(model,timetype)
-print(asop_dict['dir'],asop_dict['file_pattern'])
-infiles = glob.glob(str(asop_dict['dir'])+'/'+asop_dict['file_pattern'])
-for infile in infiles:
-    print('-->--> '+infile)
-    outfile = os.path.splitext(infile)[0]+'.'+str(gridn)+'x'+str(gridn)+'.nc'
-    if not os.path.exists(outfile) or overwrite:
-        print('-->-->--> Interpolating ...')
-        cube = iris.load_cube(infile)
-        interp_cube = interp_nxn(cube,gridn)
-        iris.save(interp_cube,outfile)
+if model_set is not None:
+    key_list = c6.get_key_list(model_set)
+else:
+    key_list = [model,]
+
+for model in key_list:
+    print('--> '+model)
+    asop_dict = c6.get_asop_dict(model,timetype)
+    print(asop_dict['dir'],asop_dict['file_pattern'])
+    infiles = glob.glob(str(asop_dict['dir'])+'/'+asop_dict['file_pattern'])
+    for infile in infiles:
+        print('-->--> '+infile)
+        outfile = os.path.splitext(infile)[0]+'.'+str(gridn)+'x'+str(gridn)+'.nc'
+        if not os.path.exists(outfile) or overwrite:
+            print('-->-->--> Interpolating ...')
+            cube = iris.load_cube(infile)
+            cube = cube.extract(iris.Constraint(time = lambda cell: PartialDateTime(year=1980) <= cell.point <= PartialDateTime(year=2020)))
+            if cube is not None:
+                interp_cube = interp_nxn(cube,gridn)
+                iris.save(interp_cube,outfile)

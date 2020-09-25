@@ -45,7 +45,7 @@ if __name__ == '__main__':
 
     if os.path.exists(masked_min_precip_file) and not masked_overwrite:
         print('-->--> Reading masked precipitation (by wet season and by min precip) from file')
-        masked_min_precip = iris.load_cube(masked_min_precip_file)
+        masked_min_precip = iris.load_cueb(masked_min_precip_file)
     elif os.path.exists(masked_precip_file) and not masked_overwrite:
         print('-->--> Reading masked precipitation (by wet season) from file')
         masked_precip = iris.load_cube(masked_precip_file)

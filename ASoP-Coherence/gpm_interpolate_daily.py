@@ -49,6 +49,7 @@ cubelist = iris.load(filelist,'Daily accumulated precipitation (combined microwa
 unify_time_units(cubelist)
 equalise_attributes(cubelist)
 cube = cubelist.concatenate_cube()
+cube.coord('longitude').circular = True
 cube = cube.intersection(longitude=(0,360))
 
 basefile = os.path.splitext(basedir+'/3B-DAY.MS.MRG.3IMERG.'+str(year)+'.V06.'+str(interp_n)+'x'+str(interp_n)+'.nc')[0]

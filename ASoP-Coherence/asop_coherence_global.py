@@ -4,7 +4,6 @@ import iris
 
 def get_asop_dict(key,time=None,grid=''):
     from pathlib import Path
-#    cmip6_path=Path('/media/nick/lacie_tb3/data_from_gill/CMIP6')
     cmip6_path=Path('/media/nick/lacie_tb3/cmip6')
     obs_path=Path('/media/nick/lacie_tb3/datasets')
     print(key)
@@ -18,7 +17,7 @@ def get_asop_dict(key,time=None,grid=''):
         last_digit = '31'
     if key == 'GPM_IMERG':
         asop_dict={
-            'desc': '3B-HHR.MS.MRG.3IMERG.'+time,
+            'desc': '3B-HHR.MS.MRG.3IMERG.V06B.'+time,
             'dir': obs_path/'GPM_IMERG'/time,
             'file_pattern': '3B-HHR.MS.3IMERG.*_means_'+grid_str+'.V06*.nc',
             'name': 'GPM_IMERG_'+time,
@@ -64,7 +63,7 @@ def get_asop_dict(key,time=None,grid=''):
             'legend_name': 'CanESM5_'+time,
             'region': [-60,60,0,360]
         }
-    elif key == 'ACCESS':
+    elif key == 'ACCESS-CM2':
         asop_dict={
             'desc': 'ACCESS-CM2_historical_r1i1p1f1_gn_'+time,
             'dir': cmip6_path/'ACCESS-CM2',
@@ -72,7 +71,7 @@ def get_asop_dict(key,time=None,grid=''):
             'file_pattern': 'pr_'+time+'*30.'+grid_str+'nc',
             'start_year': 1980,
             'stop_year': 2014,
-            'legend_name': 'ACCESS_'+time,
+            'legend_name': 'ACCESS-CM2_'+time,
             'region': [-60,60,0,360]
         }
     elif key == 'CESM2':
@@ -119,7 +118,7 @@ def get_asop_dict(key,time=None,grid=''):
             'legend_name': 'FGOALS-g3_'+time,
             'region': [-60,60,0,360]
         }
-    elif key == 'GFDL':
+    elif key == 'GFDL-CM4':
         asop_dict={
             'desc': 'GFDL-CM4_historical_r1i1p1f1_gr1_'+time,
             'dir': cmip6_path/'GFDL-CM4',
@@ -128,6 +127,17 @@ def get_asop_dict(key,time=None,grid=''):
             'start_year': 1980,
             'stop_year': 2014,
             'legend_name': 'GFDL-CM4_'+time,
+            'region': [-60,60,0,360]
+        }
+    elif key == 'GFDL-ESM4':
+        asop_dict={
+            'desc': 'GFDL-ESM4_historical_r1i1p1f1_gr1_'+time,
+            'dir': cmip6_path/'GFDL-ESM4',
+            'name': 'GFDL-ESM4_'+time,
+            'file_pattern': 'pr_'+time+'*_gr1_*'+last_digit+'.'+grid_str+'nc',
+            'start_year': 1980,
+            'stop_year': 2014,
+            'legend_name': 'GFDL-ESM4_'+time,
             'region': [-60,60,0,360]
         }
     elif key == 'GISS':
@@ -273,8 +283,20 @@ def get_asop_dict(key,time=None,grid=''):
             'legend_name': 'UKESM1-0-LL_'+time,
             'region': [-60,60,0,360]
         }
+    elif key == 'ACCESS-ESM':
+        asop_dict={
+            'desc': 'ACCESS-ESM1-5_historical_r1i1p1f1_gn_'+time,
+            'dir': cmip6_path/'ACCESS-ESM1-5',
+            'name': 'ACCESS-ESM1-5_'+time,
+            'file_pattern': 'pr_'+time+'*30.'+grid_str+'nc',
+            'start_year': 1980,
+            'stop_year': 2014,
+            'legend_name': 'ACCESS-ESM_'+time,
+            'region': [-60,60,0,360]
+        }
     else:
         raise Exception('No dictionary for '+key)
+    asop_dict['year_range'] = str(asop_dict['start_year'])+'-'+str(asop_dict['stop_year'])
     if grid is not '':
         asop_dict['desc'] = asop_dict['desc']+'_'+grid
         asop_dict['name'] = asop_dict['name']+'_'+grid
@@ -445,7 +467,7 @@ def compute_temporal_summary(precip,ndivs,min_precip_threshold=1):
     import numpy.ma as ma
     import numpy as np
     import dask
-    import iris
+    import iris.coord_categorisation
 
     # Compute temporal summary metric only
     if not 'month_number' in [coord.name() for coord in precip.coords()]:
@@ -497,15 +519,15 @@ def compute_temporal_summary(precip,ndivs,min_precip_threshold=1):
         # Compute number of valid precipitation data points (> 1 mm/day)
         precip_weights.data[m,:,:] = this_month.collapsed('time',iris.analysis.COUNT,function=lambda values: values >= threshold_units).data
     
-    onon_freq.data.mask = upper_thresh.data.mask
-    offon_freq.data.mask = upper_thresh.data.mask
-    onoff_freq.data.mask = upper_thresh.data.mask
-    offoff_freq.data.mask = upper_thresh.data.mask
+    #onon_freq.data.mask = upper_thresh.data.mask
+    #offon_freq.data.mask = upper_thresh.data.mask
+    #offoff_freq.data.mask = upper_thresh.data.mask
+    ##onoff_freq.data.mask = upper_thresh.data.mask
 
     time_inter.data = 0.5*((onon_freq.data+offoff_freq.data)-(onoff_freq.data+offon_freq.data))
-    time_inter.data.mask = upper_thresh.data.mask
+    #time_inter.data.mask = upper_thresh.data.mask
 
-    time_inter_mean = time_inter.collapsed('month_number',iris.analysis.MEAN,mdtol=0)  
+    time_inter_mean = time_inter.collapsed('month_number',iris.analysis.MEAN)  
     time_inter_mean.data = np.ma.average(time_inter.data,axis=0,weights=precip_weights.data)
     time_inter_mean.var_name='temporal_onoff_metric_mean'
     time_inter_mean.long_name='Temporal intermittency on-off metric based on '+str(ndivs)+' divisions (weighted mean of all months in wet season)'
@@ -533,7 +555,7 @@ def compute_onoff_metric_grid(this_monthyear,lower_thresh,upper_thresh):
     import iris
 
     upper_mask = this_monthyear.copy(data=np.where(this_monthyear.data >= upper_thresh.data,1,0))
-    lower_mask = this_monthyear.copy(data=np.where(this_monthyear.data < lower_thresh.data,1,0))
+    lower_mask = this_monthyear.copy(data=np.where(this_monthyear.data <= lower_thresh.data,1,0))
     upper_roll = upper_mask.copy(data=np.roll(upper_mask.data,1,axis=0))
     lower_roll = lower_mask.copy(data=np.roll(lower_mask.data,1,axis=0))
     non = upper_mask.collapsed('time',iris.analysis.SUM)
@@ -599,6 +621,9 @@ def compute_equalgrid_corr_global(precip,haversine_map,distance_bins,min_precip_
     distance_corrs = iris.cube.Cube(np.zeros((nmonths,nbins,nlat,nlon)),var_name='distance_correlations',\
         long_name='Spatial correlation of precipitation masked for the wet season',\
         dim_coords_and_dims=[(month_coord,0),(distance,1),(latitude,2),(longitude,3)])
+    npts = iris.cube.Cube(np.zeros((nmonths,nbins,nlat,nlon)),var_name='distance_npts',\
+        long_name='Number of points considered in distance bin',\
+        dim_coords_and_dims=[(month_coord,0),(distance,1),(latitude,2),(longitude,3)])
 
     precip_weights = iris.cube.Cube(data=np.empty((nmonths,nlat,nlon)),dim_coords_and_dims=[(month_coord,0),(latitude,1),(longitude,2)])
     precip_weights.var_name='precip_weights'
@@ -622,9 +647,11 @@ def compute_equalgrid_corr_global(precip,haversine_map,distance_bins,min_precip_
             dask_distcorr.append(this_distcorr)
         result = dask.compute(*dask_distcorr)
         result = np.asarray(result)
-        result = np.reshape(result,(nlat,nlon,nbins))
+        result = np.reshape(result,(nlat,2,nlon,nbins))
         for b in range(nbins):
-            distance_corrs.data[m,b,:,:] = result[:,:,b]  
+            distance_corrs.data[m,b,:,:] = result[:,0,:,b]
+            npts.data[m,b,:,:] = result[:,1,:,b]
+            print(npts.data[m,b,:,0])
 
     distance_corrs_masked = distance_corrs.copy(data=np.ma.masked_array(distance_corrs.data,np.isnan(distance_corrs.data)))
     distance_corrs_mean = iris.cube.Cube(np.zeros((nbins,nlat,nlon)),var_name='distance_correlations_mean',\
@@ -632,7 +659,7 @@ def compute_equalgrid_corr_global(precip,haversine_map,distance_bins,min_precip_
         dim_coords_and_dims=[(distance,0),(latitude,1),(longitude,2)])
     for b in range(nbins):
         distance_corrs_mean.data[b,:,:] = np.ma.average(distance_corrs_masked.data[:,b,:,:],axis=0,weights=precip_weights.data)
-    out_cubelist=[distance_corrs,distance_corrs_mean,precip_weights]
+    out_cubelist=[npts,distance_corrs,distance_corrs_mean,precip_weights]
     return(out_cubelist)
 
 @jit
@@ -641,12 +668,13 @@ def compute_equalgrid_corr_row(precip,haversine_row,myrow,min_dist,max_dist):
     nlon = len(longitude.points)
     nbins = len(min_dist)
     row_distcorr = np.zeros((nlon,nbins))
+    npts = np.zeros((nlon,nbins))
     for x,lonpt in enumerate(longitude.points):
         precip_centre = precip[:,myrow,x]
         haversine_centre = haversine_row[x,:,:]
         for b in range(nbins):
-            row_distcorr[x,b] = compute_equalgrid_corr_pt(precip,precip_centre,haversine_centre,min_dist[b],max_dist[b])
-    return(row_distcorr)
+            row_distcorr[x,b],npts[x,b] = compute_equalgrid_corr_pt(precip,precip_centre,haversine_centre,min_dist[b],max_dist[b])
+    return(np.stack([row_distcorr,npts],axis=0))
 
 @jit
 def compute_equalgrid_corr_pt(precip,precip_centre,pt_dist,dist_min,dist_max):
@@ -665,7 +693,8 @@ def compute_equalgrid_corr_pt(precip,precip_centre,pt_dist,dist_min,dist_max):
     corr_cube = corr_cube.copy(data=np.ma.masked_array(corr_cube.data,np.isnan(corr_cube.data)))
     weights = iris.analysis.cartography.area_weights(corr_cube)
     output = corr_cube.collapsed(['longitude','latitude'],iris.analysis.MEAN,weights=weights)
-    return(output.data)
+    npts = len(pts[0])
+    return(output.data,npts)
 
 @jit(nopython=True)
 def numba_corrs(precip_grid,precip_centre,indices):
