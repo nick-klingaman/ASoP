@@ -65,7 +65,7 @@ def get_asop_dict(key,time=None,grid=''):
             'desc': 'ACCESS-CM2_historical_r1i1p1f1_gn_'+time,
             'dir': cmip6_path/'ACCESS-CM2',
             'name': 'ACCESS-CM2_'+time,
-            'file_pattern': 'pr_'+time+'*30.'+grid_str+'nc',
+            'file_pattern': 'pr_'+time+'*'+last_digit+'.'+grid_str+'nc',
             'legend_name': 'ACCESS-CM2_'+time,
         }
     elif key == 'ACCESS-ESM':
@@ -73,10 +73,10 @@ def get_asop_dict(key,time=None,grid=''):
             'desc': 'ACCESS-ESM1-5_historical_r1i1p1f1_gn_'+time,
             'dir': cmip6_path/'ACCESS-ESM1-5',
             'name': 'ACCESS-ESM1-5_'+time,
-            'file_pattern': 'pr_'+time+'*30.'+grid_str+'nc',
+            'file_pattern': 'pr_'+time+'*'+last_digit+'.'+grid_str+'nc',
             'legend_name': 'ACCESS-ESM_'+time,
         }
-    elif key == 'CESM2':
+    elif key == 'CESM':
         asop_dict={
             'desc': 'CESM2_historical_r1i1p1f1_gn_'+time,
             'dir': cmip6_path/'CESM2',
@@ -121,7 +121,7 @@ def get_asop_dict(key,time=None,grid=''):
             'desc': 'EC-Earth3_historical_r1i1p1f1_gr_'+time,
             'dir': cmip6_path/'EC-Earth3',
             'name': 'EC-Earth3_'+time,
-            'file_pattern': 'pr_'+time+'*'+last_digit+'.'+grid_str+'.nc',
+            'file_pattern': 'pr_'+time+'*'+last_digit+'.'+grid_str+'nc',
             'legend_name': 'EC-Earth3'
         }
     elif key == 'EC-Earth-Veg':
@@ -129,7 +129,7 @@ def get_asop_dict(key,time=None,grid=''):
             'desc': 'EC-Earth3-Veg_historical_r1i1p1f1_gr_'+time,
             'dir': cmip6_path/'EC-Earth3-Veg',
             'name': 'EC-Earth3-Veg_'+time,
-            'file_pattern': 'pr_'+time+'*'+last_digit+'.'+grid_str+'.nc',
+            'file_pattern': 'pr_'+time+'*'+last_digit+'.'+grid_str+'nc',
             'legend_name': 'EC-Earth3-Veg'
         }
     elif key == 'EC-Earth-Veg-LR':
@@ -137,7 +137,7 @@ def get_asop_dict(key,time=None,grid=''):
             'desc': 'EC-Earth3-Veg-LR_historical_r1i1p1f1_gr_'+time,
             'dir': cmip6_path/'EC-Earth3-Veg-LR',
             'name': 'EC-Earth3-Veg-LR_'+time,
-            'file_pattern': 'pr_'+time+'*'+last_digit+'.'+grid_str+'.nc',
+            'file_pattern': 'pr_'+time+'*'+last_digit+'.'+grid_str+'nc',
             'legend_name': 'EC-Earth3-Veg-LR'
         }
     elif key == 'FGOALS':
@@ -179,6 +179,14 @@ def get_asop_dict(key,time=None,grid=''):
             'name': 'HadGEM3-GC31-MM_'+time,
             'file_pattern': 'pr_'+time+'*30.'+grid_str+'nc',
             'legend_name': 'HadGEM3-GC31-MM_'+time,
+        }
+    elif key == 'IITM-ESM':
+        asop_dict={
+            'desc': 'IITM-ESM_historical_r1i1p1f1_gn_'+time,
+            'dir': cmip6_path/'IITM-ESM',
+            'name': 'IITM-ESM_'+time,
+            'file_pattern': 'pr_'+time+'*'+last_digit+'.'+grid_str+'nc',
+            'legend_name': 'IITM-ESM_'+time
         }
     elif key == 'INM':
         asop_dict={
@@ -294,4 +302,5 @@ def get_asop_dict(key,time=None,grid=''):
     if grid is not '':
         asop_dict['desc'] = asop_dict['desc']+'_'+grid
         asop_dict['name'] = asop_dict['name']+'_'+grid
+        asop_dict['grid_str'] = grid_str
     return(asop_dict)

@@ -2,306 +2,6 @@ from numba import jit
 import numpy as np
 import iris
 
-def get_asop_dict(key,time=None,grid=''):
-    from pathlib import Path
-    cmip6_path=Path('/media/nick/lacie_tb3/cmip6')
-    obs_path=Path('/media/nick/lacie_tb3/datasets')
-    print(key)
-    if grid is not '':
-        grid_str=grid+'.'
-    else:   
-        grid_str=''
-    if time == '3hr':
-        last_digit = '30'
-    elif time == 'day':
-        last_digit = '31'
-    if key == 'GPM_IMERG':
-        asop_dict={
-            'desc': '3B-HHR.MS.MRG.3IMERG.V06B.'+time,
-            'dir': obs_path/'GPM_IMERG'/time,
-            'file_pattern': '3B-HHR.MS.3IMERG.*_means_'+grid_str+'.V06*.nc',
-            'name': 'GPM_IMERG_'+time,
-            'start_year': 2001,
-            'stop_year': 2019,
-            'legend_name': 'GPM_IMERG_'+time,
-            'region': [-60,60,0,360]
-        }
-        if time == '3hr':
-            asop_dict['file_pattern'] = '3B-HHR.MS.MRG.3IMERG.*_means_'+grid_str+'V06*.nc'
-        elif time == 'day':
-            asop_dict['file_pattern'] = '3B-DAY.MS.MRG.3IMERG.*.V06.'+grid_str+'nc'
-    elif key == 'AWI':
-        asop_dict={
-            'desc': 'AWI-CM-1-1-MR_historical_r1i1p1f1_gn_'+time,
-            'dir': cmip6_path/'AWI-CM-1-1-MR',
-            'file_pattern': 'pr_'+time+'*0.'+grid_str+'nc',
-            'name': 'AWI_CM-1-1-MR_'+time,
-            'start_year': 1980,
-            'stop_year': 2014,
-            'legend_name': 'AWI_'+time,
-            'region': [-60,60,0,360]
-        }
-    elif key == 'BCC':
-        asop_dict={
-            'dir': cmip6_path/'BCC-CSM2-MR',
-            'desc': 'BCC-CSM2-MR_historical_r1i1p1f1_gn_'+time,
-            'name': 'BCC-CSM2-MR_'+time,
-            'file_pattern': 'pr_'+time+'*'+last_digit+'.'+grid_str+'nc',
-            'start_year': 1980,
-            'stop_year': 2014,
-            'legend_name': 'BCC_'+time,
-            'region': [-60,60,0,360]
-        }
-    elif key == 'CanESM5':
-        asop_dict={
-            'dir': cmip6_path/'CanESM5',
-            'desc': 'CanESM5_historical_r1i1p1f1_gn_'+time,
-            'name': 'CanESM5_'+time,
-            'file_pattern': 'pr_'+time+'*'+last_digit+'.'+grid_str+'nc',
-            'start_year': 1980,
-            'stop_year': 2014,
-            'legend_name': 'CanESM5_'+time,
-            'region': [-60,60,0,360]
-        }
-    elif key == 'ACCESS-CM2':
-        asop_dict={
-            'desc': 'ACCESS-CM2_historical_r1i1p1f1_gn_'+time,
-            'dir': cmip6_path/'ACCESS-CM2',
-            'name': 'ACCESS-CM2_'+time,
-            'file_pattern': 'pr_'+time+'*30.'+grid_str+'nc',
-            'start_year': 1980,
-            'stop_year': 2014,
-            'legend_name': 'ACCESS-CM2_'+time,
-            'region': [-60,60,0,360]
-        }
-    elif key == 'CESM2':
-        asop_dict={
-            'desc': 'CESM2_historical_r1i1p1f1_gn_'+time,
-            'dir': cmip6_path/'CESM2',
-            'name': 'CESM2_'+time,
-            'file_pattern': 'pr_'+time+'*'+last_digit+'.'+grid_str+'nc',
-            'start_year': 1980,
-            'stop_year': 2014,
-            'legend_name': 'CESM2_'+time,
-            'region': [-60,60,0,360]
-        }
-    elif key == 'CMCC':
-        asop_dict={
-            'desc': 'CMCC-CM2-SR5_historical_r1i1p1f1_gn_'+time,
-            'dir': cmip6_path/'CMCC-CM2-SR5',
-            'name': 'CMCC-CM2-SR5_'+time,
-            'file_pattern': 'pr_'+time+'*'+last_digit+'.'+grid_str+'nc',
-            'start_year': 1980,
-            'stop_year': 2014,
-            'legend_name': 'CMCC-CM2-SR5_'+time,
-            'region': [-60,60,0,360]
-        }
-    elif key == 'CNRM':
-        asop_dict={
-            'desc': 'CNRM-CM6-1-HR_historical_r1i1p1f1_gn_'+time,
-            'dir': cmip6_path/'CNRM-CM6-1-HR',
-            'name': 'CNRM-CM6-1-HR_'+time,
-            'file_pattern': 'pr_'+time+'*'+last_digit+'.'+grid_str+'nc',
-            'start_year': 1980,
-            'stop_year': 2014,
-            'legend_name': 'CNRM-CM6-1-HR_'+time,
-            'region': [-60,60,0,360]
-        }
-    elif key == 'FGOALS':
-        asop_dict={
-            'desc': 'FGOALS-g3_historical_r1i1p1f1_gn_'+time,
-            'dir': cmip6_path/'FGOALS-g3',
-            'name': 'FGOALS-g3_'+time,
-            'file_pattern': 'pr_'+time+'*'+last_digit+'.'+grid_str+'nc',
-            'start_year': 1980,
-            'stop_year': 2014,
-            'legend_name': 'FGOALS-g3_'+time,
-            'region': [-60,60,0,360]
-        }
-    elif key == 'GFDL-CM4':
-        asop_dict={
-            'desc': 'GFDL-CM4_historical_r1i1p1f1_gr1_'+time,
-            'dir': cmip6_path/'GFDL-CM4',
-            'name': 'GFDL-CM4_'+time,
-            'file_pattern': 'pr_'+time+'*_gr1_*'+last_digit+'.'+grid_str+'nc',
-            'start_year': 1980,
-            'stop_year': 2014,
-            'legend_name': 'GFDL-CM4_'+time,
-            'region': [-60,60,0,360]
-        }
-    elif key == 'GFDL-ESM4':
-        asop_dict={
-            'desc': 'GFDL-ESM4_historical_r1i1p1f1_gr1_'+time,
-            'dir': cmip6_path/'GFDL-ESM4',
-            'name': 'GFDL-ESM4_'+time,
-            'file_pattern': 'pr_'+time+'*_gr1_*'+last_digit+'.'+grid_str+'nc',
-            'start_year': 1980,
-            'stop_year': 2014,
-            'legend_name': 'GFDL-ESM4_'+time,
-            'region': [-60,60,0,360]
-        }
-    elif key == 'GISS':
-        asop_dict={
-            'dir': cmip6_path/'GISS-E2-1-G',
-            'name': 'GISS-E2-1-G_'+time,
-            'desc': 'GISS-E2-1-G_historical_r1i1p1f1_gn_'+time,
-            'file_pattern': 'pr_'+time+'*30.'+grid_str+'nc',
-            'start_year': 1980,
-            'stop_year': 2014,
-            'legend_name': 'GISS-E2-1-G_'+time,
-            'region': [-60,60,0,360]
-        }
-    elif key == 'HadGEM3':
-        asop_dict={
-            'desc': 'HadGEM3-GC31-MM_historical_r1i1p1f3_gn_'+time,
-            'dir': cmip6_path/'HadGEM3-GC31-MM',
-            'name': 'HadGEM3-GC31-MM_'+time,
-            'file_pattern': 'pr_'+time+'*30.'+grid_str+'nc',
-            'start_year': 1980,
-            'stop_year': 2014,
-            'legend_name': 'HadGEM3-GC31-MM_'+time,
-            'region': [-60,60,0,360]
-        }
-    elif key == 'INM':
-        asop_dict={
-            'desc': 'INM-CM5-0_historical_r1i1p1f1_gr1_'+time,
-            'dir': cmip6_path/'INM-CM5-0',
-            'name': 'INM-CM-5-0_'+time,
-            'file_pattern': 'pr_'+time+'*'+last_digit+'.'+grid_str+'nc',
-            'start_year': 1980,
-            'stop_year': 2014,
-            'legend_name': 'INM-CM5_'+time,
-            'region': [-60,60,0,360]
-        }
-    elif key == 'IPSL':
-        asop_dict={
-            'desc': 'IPSL-CM6A-LR_historical_r1i1p1f1_gr1_'+time,
-            'dir': cmip6_path/'IPSL-CM6A-LR',
-            'name': 'IPSL-CM6A-LR_'+time,
-            'file_pattern': 'pr_'+time+'*'+last_digit+'.'+grid_str+'nc',
-            'start_year': 1980,
-            'stop_year': 2014,
-            'legend_name': 'IPSL-CM6A-LR_'+time,
-            'region': [-60,60,0,360]
-        }
-    elif key == 'KACE':
-        asop_dict={
-            'desc': 'KACE-1-0-G_historical_r1i1p1f1_gr_'+time,
-            'dir': cmip6_path/'KACE-1-0-G',
-            'name': 'KACE-1-0-G_'+time,
-            'file_pattern': 'pr_'+time+'*30.'+grid_str+'nc',
-            'start_year': 1980,
-            'stop_year': 2014,
-            'legend_name': 'KACE-1-0-G_'+time,
-            'region': [-60,60,0,360]
-        }
-    elif key == 'MIROC':
-        asop_dict={
-            'dir': cmip6_path/'MIROC6',
-            'name': 'MIROC6_'+time,
-            'desc': 'MIROC6_historical_r1i1p1f1_gn_'+time,
-            'file_pattern': 'pr_'+time+'*'+last_digit+'.'+grid_str+'nc',
-            'start_year': 1980,
-            'stop_year': 2014,
-            'legend_name': 'MIROC6_'+time,
-            'region': [-60,60,0,360]
-        }
-    elif key == 'MPI':
-        asop_dict={
-            'dir': cmip6_path/'MPI-ESM1-2-HR',
-            'name': 'MPI-ESM1-2-HR_'+time,
-            'desc': 'MPI-ESM1-2-HR_historical_r1i1p1f1_gn_'+time,
-            'file_pattern': 'pr_'+time+'*'+last_digit+'.'+grid_str+'nc',
-            'start_year': 1980,
-            'stop_year': 2014,
-            'legend_name': 'MPI-ESM1-2-HR_'+time,
-            'region': [-60,60,0,360]
-        }
-    elif key == 'MRI':
-        asop_dict={
-            'dir': cmip6_path/'MRI-ESM2-0',
-            'name': 'MRI-ESM2-0_'+time,
-            'desc': 'MPI-ESM2-0_historical_r1i1p1f1_gn_'+time,
-            'file_pattern': 'pr_'+time+'*'+last_digit+'.'+grid_str+'nc',
-            'start_year': 1980,
-            'stop_year': 2014,
-            'legend_name': 'MRI-ESM2-0_'+time,
-            'region': [-60,60,0,360]
-        }
-    elif key == 'NESM':
-        asop_dict={
-            'dir': cmip6_path/'NESM3',
-            'name': 'NESM3_'+time,
-            'desc': 'NESM3_historical_r1i1p1f1_gn_'+time,
-            'file_pattern': 'pr_'+time+'*'+last_digit+'.'+grid_str+'nc',
-            'start_year': 1980,
-            'stop_year': 2014,
-            'legend_name': 'NESM3_'+time,
-            'region': [-60,60,0,360]
-        }
-    elif key == 'NorESM':
-        asop_dict={
-            'dir': cmip6_path/'NorESM2-MM',
-            'name': 'NorESM2-MM_'+time,
-            'desc': 'NorESM2-MM_historical_r1i1p1f1_gn_'+time,
-            'file_pattern': 'pr_'+time+'*'+last_digit+'.'+grid_str+'nc',
-            'start_year': 1980,
-            'stop_year': 2014,
-            'legend_name': 'NorESM2-MM_'+time,
-            'region': [-60,60,0,360]
-        }
-    elif key == 'SAM0-UNICON':
-        asop_dict={
-            'dir': cmip6_path/'SAM0-UNICON',
-            'name': 'SAM_'+time,
-            'desc': 'SAM0-UNICON_historical_r1i1p1f1_gn_'+time,
-            'file_pattern': 'pr_'+time+'*'+last_digit+'.'+grid_str+'nc',
-            'start_year': 1980,
-            'stop_year': 2014,
-            'legend_name': 'SAM0-UNICON_'+time,
-            'region': [-60,60,0,360]
-        }
-    elif key == 'TaiESM':
-        asop_dict={
-            'dir': cmip6_path/'TaiESM1',
-            'name': 'TaiESM1_'+time,
-            'desc': 'TaiESM1_historical_r1i1p1f1_gn_'+time,
-            'file_pattern': 'pr_'+time+'*'+last_digit+'.'+grid_str+'nc',
-            'start_year': 1980,
-            'stop_year': 2014,
-            'legend_name': 'TaiESM1_'+time,
-            'region': [-60,60,0,360]
-        }
-    elif key == 'UKESM1':
-        asop_dict={
-            'dir': cmip6_path/'UKESM1-0-LL',
-            'name': 'UKESM1-0-LL_'+time,
-            'desc': 'UKESM1-0-LL_historical_r1i1p1f2_gn_'+time,
-            'file_pattern': 'pr_'+time+'*30.'+grid_str+'nc',
-            'start_year': 1980,
-            'stop_year': 2014,
-            'legend_name': 'UKESM1-0-LL_'+time,
-            'region': [-60,60,0,360]
-        }
-    elif key == 'ACCESS-ESM':
-        asop_dict={
-            'desc': 'ACCESS-ESM1-5_historical_r1i1p1f1_gn_'+time,
-            'dir': cmip6_path/'ACCESS-ESM1-5',
-            'name': 'ACCESS-ESM1-5_'+time,
-            'file_pattern': 'pr_'+time+'*30.'+grid_str+'nc',
-            'start_year': 1980,
-            'stop_year': 2014,
-            'legend_name': 'ACCESS-ESM_'+time,
-            'region': [-60,60,0,360]
-        }
-    else:
-        raise Exception('No dictionary for '+key)
-    asop_dict['year_range'] = str(asop_dict['start_year'])+'-'+str(asop_dict['stop_year'])
-    if grid is not '':
-        asop_dict['desc'] = asop_dict['desc']+'_'+grid
-        asop_dict['name'] = asop_dict['name']+'_'+grid
-    return(asop_dict)
-
 def load_cmip6(asop_dict):
     import iris
     from iris.util import unify_time_units
@@ -635,23 +335,42 @@ def compute_equalgrid_corr_global(precip,haversine_map,distance_bins,min_precip_
         # Compute number of valid precipitation data points (> 1 mm/day)
         precip_weights.data[m,:,:] = this_month.collapsed('time',iris.analysis.COUNT,function=lambda values: values >= threshold_units).data
 
-    haversine_map = dask.delayed(haversine_map)
+    haversine_map.coord('target_latitude').units = precip.coord('latitude').units
+    haversine_map.coord('target_longitude').units = precip.coord('longitude').units
+    #haversine_map = dask.delayed(haversine_map)
     for m,month in enumerate(months):
         print('-->-->--> Month '+str(month))
         month_constraint = iris.Constraint(month_number=month)
         this_month = precip.extract(month_constraint)
-        this_month = dask.delayed(this_month)
+        #this_month = dask.delayed(this_month)
         dask_distcorr = []
-        for y in range(nlat):
-            this_distcorr = dask.delayed(compute_equalgrid_corr_row)(this_month,haversine_map.data[y,:,:,:],y,min_dist,max_dist)
+        for y,latpt in enumerate(latitude.points):
+            precip_neighbors = this_month.intersection(latitude = (latpt-20,latpt+20))
+            myrow = np.where(precip_neighbors.coord('latitude').points == latpt)
+            haversine_neighbors = haversine_map[y,:,:,:].intersection(target_latitude= (latpt-20,latpt+20))
+            this_distcorr = dask.delayed(compute_equalgrid_corr_row)(precip_neighbors,haversine_neighbors.data,myrow[0],min_dist,max_dist)
+            #for x,lonpt in enumerate(longitude.points):
+            #    precip_centre = this_month[:,y,x]
+            #    haversine_centre = haversine_map[y,x,:,:]
+            #    for b in range(nbins):
+            #        distance_corrs.data[m,b,y,x],npts.data[m,b,y,x] = compute_equalgrid_corr_pt(precip_neighbors,precip_centre,haversine_neighbors.data,min_dist[b],max_dist[b])
+            #        distpts.append(distpt)
             dask_distcorr.append(this_distcorr)
         result = dask.compute(*dask_distcorr)
-        result = np.asarray(result)
-        result = np.reshape(result,(nlat,2,nlon,nbins))
+        result = np.asarray(result).reshape((nlat,2,nlon,nbins))
         for b in range(nbins):
             distance_corrs.data[m,b,:,:] = result[:,0,:,b]
             npts.data[m,b,:,:] = result[:,1,:,b]
-            print(npts.data[m,b,:,0])
+#            result = dask.compute(*distpts)
+#            result = np.asarray(distpts)
+#            result = np.reshape(result,(nlon,nbins,2))
+#            dask_distcorr.append(this_distcorr)
+#        result = dask.compute(*dask_distcorr)
+#        result = np.asarray(result)
+#        result = np.reshape(result,(nlat,2,nlon,nbins))
+#            for b in range(nbins):
+#                distance_corrs.data[m,b,y,:] = result[:,b,0]
+#                npts.data[m,b,y,:] = result[:,b,1]
 
     distance_corrs_masked = distance_corrs.copy(data=np.ma.masked_array(distance_corrs.data,np.isnan(distance_corrs.data)))
     distance_corrs_mean = iris.cube.Cube(np.zeros((nbins,nlat,nlon)),var_name='distance_correlations_mean',\
@@ -670,7 +389,7 @@ def compute_equalgrid_corr_row(precip,haversine_row,myrow,min_dist,max_dist):
     row_distcorr = np.zeros((nlon,nbins))
     npts = np.zeros((nlon,nbins))
     for x,lonpt in enumerate(longitude.points):
-        precip_centre = precip[:,myrow,x]
+        precip_centre = precip[:,myrow,x].collapsed('latitude',iris.analysis.MEAN)
         haversine_centre = haversine_row[x,:,:]
         for b in range(nbins):
             row_distcorr[x,b],npts[x,b] = compute_equalgrid_corr_pt(precip,precip_centre,haversine_centre,min_dist[b],max_dist[b])
@@ -694,7 +413,7 @@ def compute_equalgrid_corr_pt(precip,precip_centre,pt_dist,dist_min,dist_max):
     weights = iris.analysis.cartography.area_weights(corr_cube)
     output = corr_cube.collapsed(['longitude','latitude'],iris.analysis.MEAN,weights=weights)
     npts = len(pts[0])
-    return(output.data,npts)
+    return(np.stack([output.data,npts],axis=0))
 
 @jit(nopython=True)
 def numba_corrs(precip_grid,precip_centre,indices):
@@ -725,8 +444,8 @@ def compute_haversine_map(cube):
     nlat = len(latitude.points)
     longitude = cube.coord('longitude')
     nlon = len(longitude.points)
-    target_latitude = iris.coords.DimCoord(latitude.points,var_name='target_lat',long_name='Target latitude')
-    target_longitude = iris.coords.DimCoord(longitude.points,var_name='target_lon',long_name='Target longitude')
+    target_latitude = iris.coords.DimCoord(latitude.points,var_name='target_lat',long_name='target_latitude')
+    target_longitude = iris.coords.DimCoord(longitude.points,var_name='target_lon',long_name='target_longitude')
     haversine_map = iris.cube.Cube(data=np.zeros((nlat,nlon,nlat,nlon)),dim_coords_and_dims=[(latitude,0),(longitude,1),(target_latitude,2),(target_longitude,3)],\
         var_name='haversine_map',long_name='Map of point-to-point distances')
     haversines = []
@@ -829,29 +548,33 @@ def compute_spatial_onoff_metric_grid(precip,lower_thresh,upper_thresh,cyclic=Tr
     nlat = len(lat_coord.points)
 
     onon = np.zeros((nlat,nlon),dtype=np.float32) ; onoff = np.zeros((nlat,nlon),dtype=np.float32) ; offon = np.zeros((nlat,nlon),dtype=np.float32) ; offoff = np.zeros((nlat,nlon),dtype=np.float32)
-    precip = dask.delayed(precip)
-    upper_thresh = dask.delayed(upper_thresh)
+#    precip = dask.delayed(precip)
+#    upper_thresh = dask.delayed(upper_thresh)
     lower_mask = dask.delayed(lower_mask)
     upper_mask = dask.delayed(upper_mask)
     row_metrics = []
     for lat in range(1,nlat-1):
-        row_metric = dask.delayed(compute_spatial_onoff_metric_row)(precip,lat,upper_thresh,lower_mask,upper_mask) 
+        row_metric = dask.delayed(compute_spatial_onoff_metric_row)(upper_thresh[lat-1:lat+2,:],lower_mask[:,lat-1:lat+2,:],upper_mask[:,lat-1:lat+2,:]) 
+        #row_metric = compute_spatial_onoff_metric_row(precip,lat,upper_thresh,lower_mask,upper_mask)
         row_metrics.append(row_metric)
     result = dask.compute(*row_metrics)
-    result = np.ma.asarray(result)
+#    result = np.ma.asarray(result)
     result = np.reshape(result,(nlat-2,nlon,4))
     onon[1:nlat-1,:] = result[:,:,0] ; onoff[1:nlat-1,:] = result[:,:,1] ; offon[1:nlat-1,:] = result[:,:,2] ; offoff[1:nlat-1,:] = result[:,:,3]
     output = np.stack([onon,onoff,offon,offoff],axis=0)
     return(output)
 
-def compute_spatial_onoff_metric_row(precip,row,upper_thresh,lower_mask,upper_mask):
-    lon_coord = precip.coord('longitude')
-    lat_coord = precip.coord('latitude')
-    nlon = len(precip.coord('longitude').points)
+def compute_spatial_onoff_metric_row(upper_thresh,lower_mask,upper_mask):
+    import dask
+    lon_coord = upper_thresh.coord('longitude')
+    lat_coord = upper_thresh.coord('latitude')
+    nlon = len(upper_thresh.coord('longitude').points)
     row_metric = np.zeros((nlon,4))
+    point_metrics = []
     for lon in range(nlon):
-        if upper_thresh.data.mask[row,lon]:
+        if upper_thresh.data.mask[1,lon]:
             point_metric = compute_spatial_onoff_metric_point(None,None,None,None)
+#            point_metrics.append(point_metric)
         else:
             if lon == 0:
                 min_lon = lon_coord.points[-1]-360
@@ -861,18 +584,21 @@ def compute_spatial_onoff_metric_row(precip,row,upper_thresh,lower_mask,upper_ma
                 max_lon = lon_coord.points[0]+360
             else:
                 max_lon = lon_coord.points[lon+1]
-            upper_neighbors = upper_mask.intersection(longitude = (min_lon,max_lon), latitude = (lat_coord.points[row-1],lat_coord.points[row+1]))
-            lower_neighbors = lower_mask.intersection(longitude = (min_lon,max_lon), latitude = (lat_coord.points[row-1],lat_coord.points[row+1]))
+            upper_neighbors = upper_mask.intersection(longitude = (min_lon,max_lon), latitude = (lat_coord.points[0],lat_coord.points[2]))
+            lower_neighbors = lower_mask.intersection(longitude = (min_lon,max_lon), latitude = (lat_coord.points[0],lat_coord.points[2]))
             on_neighbors_mask = upper_neighbors.copy() 
             off_neighbors_mask = lower_neighbors.copy()
             for y in range(len(upper_neighbors.coord('latitude').points)):
                 for x in range(len(upper_neighbors.coord('longitude').points)):
-                    on_neighbors_mask.data[:,y,x] = 1-upper_mask.data[:,row,lon] # Mask neighbors where central point is above upper threshold
-                    off_neighbors_mask.data[:,y,x] = 1-lower_mask.data[:,row,lon] # Mask neighbors where central point is below lower threshold
+                    on_neighbors_mask.data[:,y,x] = 1-upper_mask.data[:,1,lon] # Mask neighbors where central point is above upper threshold
+                    off_neighbors_mask.data[:,y,x] = 1-lower_mask.data[:,1,lon] # Mask neighbors where central point is below lower threshold
             on_neighbors_mask.data[:,1,1] = 1 # Mask values at central point
             off_neighbors_mask.data[:,1,1] = 1 # Mask values at central point
             point_metric = compute_spatial_onoff_metric_point(on_neighbors_mask,off_neighbors_mask,upper_neighbors,lower_neighbors)
         row_metric[lon,:] = point_metric
+#            point_metrics.append(point_metric)
+#    result = dask.compute(*point_metrics)
+#    row_metric[:,:] = np.ma.asarray(result).reshape((nlon,4))
     return(row_metric)
 
 def compute_spatial_onoff_metric_point(on_neighbors_mask=None,off_neighbors_mask=None,upper_neighbors=None,lower_neighbors=None):
