@@ -58,7 +58,7 @@ def conform_precip_threshold(precip,threshold):
         input_units = 'mm/h'
     elif precip.units == 'kg m-2 s-1':
         input_units = 'mm/s'
-    elif precip.units == 'mm':
+    elif precip.units == 'mm' or precip.units == 'kg m-2 day-1':
         input_units = 'mm/day'
     else:
         input_units = precip.units
@@ -187,94 +187,95 @@ def compute_temporal_summary(precip,ndivs,min_precip_threshold=1):
     lower_thresh.long_name='Lower (off) threshold based on '+str(ndivs)+' divisions'
     upper_thresh = new_cube_copy(lower_thresh,'upper_threshold','Upper (on) threshold based on '+str(ndivs)+' divisions')
     time_inter = new_cube_copy(lower_thresh,'temporal_onoff_metric','Temporal intermittency on-off metric based on '+str(ndivs)+' divisions')
-    onon_freq = new_cube_copy(lower_thresh,'prob_onon','Probability of upper division followed by upper division')
-    onoff_freq = new_cube_copy(lower_thresh,'prob_onoff','Probability of upper division followed by lower division')
-    offon_freq = new_cube_copy(lower_thresh,'prob_offon','Probability of lower division followed by upper division')
-    offoff_freq = new_cube_copy(lower_thresh,'prob_offoff','Probability of lower division followed by lower division')
+    onon_freq = new_cube_copy(lower_thresh,'count_onon','Frequency of upper division followed by upper division')
+    onon_prob = new_cube_copy(lower_thresh,'prob_onon','Probability of upper division followed by upper division')
+    onoff_freq = new_cube_copy(lower_thresh,'count_onoff','Frequency of upper division followed by lower division')
+    onoff_prob = new_cube_copy(lower_thresh,'prob_onoff','Probability of upper division followed by lower division')
+    offon_freq = new_cube_copy(lower_thresh,'count_offon','Frequency of lower division by upper division')
+    offon_prob = new_cube_copy(lower_thresh,'prob_offon','Probability of lower division followed by upper division')
+    offoff_freq = new_cube_copy(lower_thresh,'count_offoff','Frequency of lower division followed by lower division')
+    offoff_prob = new_cube_copy(lower_thresh,'prob_offoff','Probability of lower division followed by lower division')
+    on_freq = new_cube_copy(lower_thresh,'count_on','Frequency of upper division')
+    off_freq = new_cube_copy(lower_thresh,'count_off','Frequency of lower division')
 
     precip_weights = iris.cube.Cube(data=np.empty((nmonths,nlat,nlon)),dim_coords_and_dims=[(month_coord,0),(lat_coord,1),(lon_coord,2)])
     precip_weights.var_name='precip_weights'
     precip_weights.long_name='Weights for computing mean metric over wet season (count of precip values above '+str(min_precip_threshold)+' mm/day'
 
+    month_summaries=[]
     for m,month in enumerate(months):
         print('-->-->--> Month '+str(month))
-        month_summaries=[]
         month_constraint = iris.Constraint(month_number=month)
         this_month = precip.extract(month_constraint)
         lower_thresh.data[m,:,:] = this_month.collapsed('time',iris.analysis.PERCENTILE,percent=100.0/ndivs).data
         upper_thresh.data[m,:,:] = this_month.collapsed('time',iris.analysis.PERCENTILE,percent=100.0*(1.0-1.0/ndivs)).data
-        years = set(this_month.coord('year').points)
-        for year in years:
-            this_monthyear = dask.delayed(this_month.extract(iris.Constraint(year=year)))
-            monthyear_summary = dask.delayed(compute_onoff_metric_grid)(this_monthyear,lower_thresh[m,:,:],upper_thresh[m,:,:])
-            month_summaries.append(monthyear_summary)
-        result = dask.compute(*month_summaries)
-        result = np.ma.asarray(result)
-        print(np.shape(result))
+        month_summary = dask.delayed(compute_temporal_onoff_metric_grid)(this_month,lower_thresh[m,:,:],upper_thresh[m,:,:])
+        month_summaries.append(month_summary)
+    result = dask.compute(*month_summaries)
+    result = np.ma.asarray(result)
 
-        onon_freq.data[m,:,:] = np.nanmean(result[:,0,:,:],axis=0)
-        onoff_freq.data[m,:,:] = np.nanmean(result[:,1,:,:],axis=0)
-        offon_freq.data[m,:,:] = np.nanmean(result[:,2,:,:],axis=0)
-        offoff_freq.data[m,:,:] = np.nanmean(result[:,3,:,:],axis=0)
+    onon_freq.data = np.ma.array(result[:,0,:,:],mask=lower_thresh.data.mask,dtype=np.float64)
+    onoff_freq.data = np.ma.array(result[:,1,:,:],mask=lower_thresh.data.mask,dtype=np.float64)
+    offon_freq.data = np.ma.array(result[:,2,:,:],mask=lower_thresh.data.mask,dtype=np.float64)
+    offoff_freq.data = np.ma.array(result[:,3,:,:],mask=lower_thresh.data.mask,dtype=np.float64)
+    on_freq.data = np.ma.array(result[:,4,:,:],mask=lower_thresh.data.mask,dtype=np.float64)
+    off_freq.data = np.ma.array(result[:,5,:,:],mask=lower_thresh.data.mask,dtype=np.float64)
         # Compute number of valid precipitation data points (> 1 mm/day)
-        precip_weights.data[m,:,:] = this_month.collapsed('time',iris.analysis.COUNT,function=lambda values: values >= threshold_units).data
+        #precip_weights.data[m,:,:] = this_month.collapsed('time',iris.analysis.COUNT,function=lambda values: values >= threshold_units).data
+
+    on_freq_sum = np.ma.sum(on_freq.data,axis=0)
+    off_freq_sum = np.ma.sum(off_freq.data,axis=0)
     
-    #onon_freq.data.mask = upper_thresh.data.mask
-    #offon_freq.data.mask = upper_thresh.data.mask
-    #offoff_freq.data.mask = upper_thresh.data.mask
-    ##onoff_freq.data.mask = upper_thresh.data.mask
+    onon_prob.data = onon_freq.data / on_freq.data
+    onon_prob_mean = onon_prob.collapsed('month_number',iris.analysis.MEAN)
+    onon_prob_mean.var_name='prob_onon_mean'
+    onon_prob_mean.long_name='Probability of upper division followed by upper division (weighted mean of all months in wet season)'
+    onon_prob_mean.data = np.ma.sum(onon_freq.data,axis=0)/on_freq_sum
 
-    time_inter.data = 0.5*((onon_freq.data+offoff_freq.data)-(onoff_freq.data+offon_freq.data))
-    #time_inter.data.mask = upper_thresh.data.mask
+    offon_prob.data = offon_freq.data / off_freq.data
+    offon_prob_mean = onon_prob_mean.copy(data=np.ma.sum(offon_freq.data,axis=0)/off_freq_sum)
+    offon_prob_mean.var_name='prob_offon_mean'
+    offon_prob_mean.long_name='Probability of lower division followed by upper division (weighted mean of all months in wet season)'
 
-    time_inter_mean = time_inter.collapsed('month_number',iris.analysis.MEAN)  
-    time_inter_mean.data = np.ma.average(time_inter.data,axis=0,weights=precip_weights.data)
+    onoff_prob.data = onoff_freq.data / on_freq.data
+    onoff_prob_mean = onon_prob_mean.copy(data=np.ma.sum(onoff_freq.data,axis=0)/on_freq_sum)
+    onoff_prob_mean.var_name='prob_onoff_mean'
+    onoff_prob_mean.long_name='Probability of upper division followed by lower division (weighted mean of all months in wet season)'
+
+    offoff_prob.data = offoff_freq.data / off_freq.data
+    offoff_prob_mean = onon_prob_mean.copy(data=np.ma.sum(offoff_freq.data,axis=0)/off_freq_sum)
+    offoff_prob_mean.var_name='prob_offoff_mean'
+    offoff_prob_mean.long_name='Probability of lower division followed by lower division (weighted mean of all months in wet season)'
+
+    time_inter.data = 0.5*((onon_prob.data+offoff_prob.data)-(onoff_prob.data+offon_prob.data))
+    time_inter_mean = onon_prob_mean.copy(data=0.5*((np.ma.sum(onon_freq.data,axis=0)/on_freq_sum+np.ma.sum(offoff_freq.data,axis=0)/off_freq_sum-(np.ma.sum(offon_freq.data,axis=0)/off_freq_sum+np.ma.sum(onoff_freq.data,axis=0)/on_freq_sum))))
     time_inter_mean.var_name='temporal_onoff_metric_mean'
     time_inter_mean.long_name='Temporal intermittency on-off metric based on '+str(ndivs)+' divisions (weighted mean of all months in wet season)'
-    onon_freq_mean = onon_freq.collapsed('month_number',iris.analysis.MEAN)
-    onon_freq_mean.data = np.ma.average(onon_freq.data,axis=0,weights=precip_weights.data)
-    onon_freq_mean.var_name='prob_onon_mean'
-    onon_freq_mean.long_name='Probability of upper division followed by upper division (weighted mean of all months in wet season)'
-    onoff_freq_mean = onoff_freq.collapsed('month_number',iris.analysis.MEAN)
-    onoff_freq_mean.data = np.ma.average(onoff_freq.data,axis=0,weights=precip_weights.data)
-    onoff_freq_mean.var_name='prob_onoff_mean'
-    onoff_freq_mean.long_name='Probability of upper division followed by lower division (weighted mean of all months in wet season)'
-    offon_freq_mean = offon_freq.collapsed('month_number',iris.analysis.MEAN)
-    offon_freq_mean.data = np.ma.average(offon_freq.data,axis=0,weights=precip_weights.data)
-    offon_freq_mean.var_name='prob_offon_mean'
-    offon_freq_mean.long_name='Probability of lower division followed by upper division (weighted mean of all months in wet season)'
-    offoff_freq_mean = offoff_freq.collapsed('month_number',iris.analysis.MEAN)
-    offoff_freq_mean.data = np.ma.average(offoff_freq.data,axis=0,weights=precip_weights.data)
-    offoff_freq_mean.var_name='prob_offoff_mean'
-    offoff_freq_mean.long_name='Probability of lower division followed by lower division (weighted mean of all months in wet season)'
-    out_cubelist = [time_inter,onon_freq,onoff_freq,offon_freq,offoff_freq,lower_thresh,upper_thresh,time_inter_mean,onon_freq_mean,onoff_freq_mean,offon_freq_mean,offoff_freq_mean,precip_weights]
+
+    out_cubelist = [time_inter,onon_freq,onoff_freq,offon_freq,offoff_freq,lower_thresh,upper_thresh,time_inter_mean,onon_prob,onon_prob_mean,onoff_prob,onoff_prob_mean,offon_prob,offon_prob_mean,offoff_prob,offoff_prob_mean,on_freq,off_freq]
     return(out_cubelist)
 
-def compute_onoff_metric_grid(this_monthyear,lower_thresh,upper_thresh):
+def compute_temporal_onoff_metric_grid(this_monthyear,lower_thresh,upper_thresh):
     import numpy as np
     import iris
 
-    upper_mask = this_monthyear.copy(data=np.where(this_monthyear.data >= upper_thresh.data,1,0))
-    lower_mask = this_monthyear.copy(data=np.where(this_monthyear.data <= lower_thresh.data,1,0))
-    upper_roll = upper_mask.copy(data=np.roll(upper_mask.data,1,axis=0))
-    lower_roll = lower_mask.copy(data=np.roll(lower_mask.data,1,axis=0))
+    upper_mask = this_monthyear.copy(data=np.ma.array(np.where(this_monthyear.data >= upper_thresh.data,1,0),mask=this_monthyear.data.mask))
+    lower_mask = this_monthyear.copy(data=np.ma.array(np.where(this_monthyear.data <= lower_thresh.data,1,0),mask=this_monthyear.data.mask))
+    upper_roll = upper_mask.copy(data=np.ma.array(np.roll(upper_mask.data,1,axis=0),mask=upper_mask.data.mask))
+    lower_roll = lower_mask.copy(data=np.ma.array(np.roll(lower_mask.data,1,axis=0),mask=lower_mask.data.mask))
     non = upper_mask.collapsed('time',iris.analysis.SUM)
     noff = lower_mask.collapsed('time',iris.analysis.SUM)
 
     onon = upper_mask + upper_roll
-    onon_count = onon.collapsed('time',iris.analysis.COUNT,function=lambda values: values == 2) / non
-    onon_count.var_name = 'onon_count'
+    onon_count = onon.collapsed('time',iris.analysis.COUNT,function=lambda values: values == 2)
     onoff = upper_mask + lower_roll
-    onoff_count = onoff.collapsed('time',iris.analysis.COUNT,function=lambda values: values == 2) / non
-    onoff_count.var_name = 'onoff_count'
+    onoff_count = onoff.collapsed('time',iris.analysis.COUNT,function=lambda values: values == 2)
     offon = lower_mask + upper_roll
-    offon_count = offon.collapsed('time',iris.analysis.COUNT,function=lambda values: values == 2) / noff
-    offon_count.var_name = 'offon_count'
+    offon_count = offon.collapsed('time',iris.analysis.COUNT,function=lambda values: values == 2)
     offoff = lower_mask + lower_roll
-    offoff_count = offoff.collapsed('time',iris.analysis.COUNT,function=lambda values: values == 2) / noff
-    offoff_count.var_name = 'offoff_count'
+    offoff_count = offoff.collapsed('time',iris.analysis.COUNT,function=lambda values: values == 2)
 
-    output = np.stack([onon_count.data,onoff_count.data,offon_count.data,offoff_count.data],axis=0)
+    output = np.stack([onon_count.data,onoff_count.data,offon_count.data,offoff_count.data,non.data,noff.data],axis=0)
     return(output)
 
 def haversine(origin, destination):
@@ -471,9 +472,10 @@ def compute_spatial_summary(precip,ndivs,min_precip_threshold=1):
     lat_coord = precip.coord('latitude')
     nlon = len(lon_coord.points)
     nlat = len(lat_coord.points)
-    threshold_units = conform_precip_threshold(precip,min_precip_threshold)
+  #  threshold_units = conform_precip_threshold(precip,min_precip_threshold)
 
     months = sorted(set(precip.coord('month_number').points))
+    print(precip.coord('month_number').points)
     month_coord = iris.coords.DimCoord(months,var_name='month_number')
     nmonths = len(months)
     
@@ -482,141 +484,130 @@ def compute_spatial_summary(precip,ndivs,min_precip_threshold=1):
     lower_thresh.long_name='Lower (off) threshold based on '+str(ndivs)+' divisions'
     upper_thresh = new_cube_copy(lower_thresh,'upper_threshold','Upper (on) threshold based on '+str(ndivs)+' divisions')
     space_inter = new_cube_copy(lower_thresh,'spatial_onoff_metric','Spatial intermittency on-off metric based on '+str(ndivs)+' divisions')
-    onon_freq = new_cube_copy(lower_thresh,'prob_onon','Probability of upper division neighbouring upper division')
-    onoff_freq = new_cube_copy(lower_thresh,'prob_onoff','Probability of upper division neighbouring lower division')
-    offon_freq = new_cube_copy(lower_thresh,'prob_offon','Probability of lower division neighbouring upper division')
-    offoff_freq = new_cube_copy(lower_thresh,'prob_offoff','Probability of lower division neighbouring lower division')
+    onon_freq = new_cube_copy(lower_thresh,'count_onon','Frequency of upper division neighboured by upper division')
+    onon_prob = new_cube_copy(lower_thresh,'prob_onon','Probability of upper division neighboured by upper division')
+    onoff_freq = new_cube_copy(lower_thresh,'count_onoff','Frequency of upper division neighboured by lower division')
+    onoff_prob = new_cube_copy(lower_thresh,'prob_onoff','Probability of upper division neighboured by lower division')
+    offon_freq = new_cube_copy(lower_thresh,'count_offon','Frequency of lower division neighboured by upper division')
+    offon_prob = new_cube_copy(lower_thresh,'prob_offon','Probability of lower division neighboured by upper division')
+    offoff_freq = new_cube_copy(lower_thresh,'count_offoff','Probability of lower division neighboured by lower division')
+    offoff_prob = new_cube_copy(lower_thresh,'prob_offoff','Probability of lower division neighboured by lower division')
+    on_freq = new_cube_copy(lower_thresh,'count_on','Frequency of upper division')
+    off_freq = new_cube_copy(lower_thresh,'count_off','Frequency of lower division')
 
     precip_weights = iris.cube.Cube(data=np.empty((nmonths,nlat,nlon)),dim_coords_and_dims=[(month_coord,0),(lat_coord,1),(lon_coord,2)])
     precip_weights.var_name='precip_weights'
     precip_weights.long_name='Weights for computing mean metric over wet season (count of precip values above '+str(min_precip_threshold)+' mm/day'
 
+    month_summaries=[]
     for m,month in enumerate(months):
         print('-->-->--> Month '+str(month))
         month_constraint = iris.Constraint(month_number=month)
         this_month = precip.extract(month_constraint)
         lower_thresh.data[m,:,:] = this_month.collapsed('time',iris.analysis.PERCENTILE,percent=100.0/ndivs).data
         upper_thresh.data[m,:,:] = this_month.collapsed('time',iris.analysis.PERCENTILE,percent=100.0*(1.0-1.0/ndivs)).data
+        #month_summary = dask.delayed(compute_spatial_onoff_metric_grid)(this_month,lower_thresh[m,:,:],upper_thresh[m,:,:])
         month_summary = compute_spatial_onoff_metric_grid(this_month,lower_thresh[m,:,:],upper_thresh[m,:,:])
-        onon_freq.data[m,:,:] = month_summary[0,:,:]
-        onoff_freq.data[m,:,:] =  month_summary[1,:,:]
-        offon_freq.data[m,:,:] =  month_summary[2,:,:]
-        offoff_freq.data[m,:,:] = month_summary[3,:,:]
+        month_summaries.append(month_summary)
+    #result = dask.compute(*month_summaries)
+    result = np.asarray(month_summaries)
+    onon_freq.data = np.ma.array(result[:,0,:,:],mask=lower_thresh.data.mask,dtype=np.float64)
+    onoff_freq.data = np.ma.array(result[:,1,:,:],mask=lower_thresh.data.mask,dtype=np.float64)
+    offon_freq.data = np.ma.array(result[:,2,:,:],mask=lower_thresh.data.mask,dtype=np.float64)
+    offoff_freq.data = np.ma.array(result[:,3,:,:],mask=lower_thresh.data.mask,dtype=np.float64)
+    on_freq.data = np.ma.array(result[:,4,:,:],mask=lower_thresh.data.mask,dtype=np.float64)
+    off_freq.data = np.ma.array(result[:,5,:,:],mask=lower_thresh.data.mask,dtype=np.float64)
+
         # Compute number of valid precipitation data points (> 1 mm/day)
-        precip_weights.data[m,:,:] = this_month.collapsed('time',iris.analysis.COUNT,function=lambda values: values >= threshold_units).data
+    #precip_weights.data[m,:,:] = this_month.collapsed('time',iris.analysis.COUNT,function=lambda values: values >= threshold_units).data
     
+    on_freq_sum = np.ma.sum(on_freq.data,axis=0)
+    off_freq_sum = np.ma.sum(off_freq.data,axis=0)
 
-    onon_freq.data.mask = upper_thresh.data.mask
-    offon_freq.data.mask = upper_thresh.data.mask
-    onoff_freq.data.mask = upper_thresh.data.mask
-    offoff_freq.data.mask = upper_thresh.data.mask
+    onon_prob.data = onon_freq.data / on_freq.data
+    onon_prob_mean = onon_prob.collapsed('month_number',iris.analysis.MEAN)
+    onon_prob_mean.var_name='prob_onon_mean'
+    onon_prob_mean.long_name='Probability of upper division neighboured by upper division (weighted mean of all months in wet season)'
+    onon_prob_mean.data = np.ma.sum(onon_freq.data,axis=0)/on_freq_sum
 
-    space_inter.data = 0.5*((onon_freq.data+offoff_freq.data)-(onoff_freq.data+offon_freq.data))
-    space_inter.data.mask = upper_thresh.data.mask
-    space_inter_mean = space_inter.collapsed('month_number',iris.analysis.MEAN,mdtol=0)  
-    space_inter_mean.data = np.ma.average(space_inter.data,axis=0,weights=precip_weights.data)
+    offon_prob.data = offon_freq.data / off_freq.data
+    offon_prob_mean = onon_prob_mean.copy(data=np.ma.sum(offon_freq.data,axis=0)/off_freq_sum)
+    offon_prob_mean.var_name='prob_offon_mean'
+    offon_prob_mean.long_name='Probability of lower division neighboured by upper division (weighted mean of all months in wet season)'
+
+    onoff_prob.data = onoff_freq.data / on_freq.data
+    onoff_prob_mean = onon_prob_mean.copy(data=np.ma.sum(onoff_freq.data,axis=0)/on_freq_sum)
+    onoff_prob_mean.var_name='prob_onoff_mean'
+    onoff_prob_mean.long_name='Probability of upper division neighboured by lower division (weighted mean of all months in wet season)'
+
+    offoff_prob.data = offoff_freq.data / off_freq.data
+    offoff_prob_mean = onon_prob_mean.copy(data=np.ma.sum(offoff_freq.data,axis=0)/off_freq_sum)
+    offoff_prob_mean.var_name='prob_offoff_mean'
+    offoff_prob_mean.long_name='Probability of lower division neighboured by lower division (weighted mean of all months in wet season)'
+
+    space_inter.data = 0.5*((onon_prob.data+offoff_prob.data)-(onoff_prob.data+offon_prob.data))
+    space_inter_mean = onon_prob_mean.copy(data=0.5*((np.ma.sum(onon_freq.data,axis=0)/on_freq_sum+np.ma.sum(offoff_freq.data,axis=0)/off_freq_sum-(np.ma.sum(offon_freq.data,axis=0)/off_freq_sum+np.ma.sum(onoff_freq.data,axis=0)/on_freq_sum))))
     space_inter_mean.var_name='spatial_onoff_metric_mean'
-    space_inter_mean.long_name='spatial intermittency on-off metric based on '+str(ndivs)+' divisions (weighted mean of all months in wet season)'
-    onon_freq_mean = onon_freq.collapsed('month_number',iris.analysis.MEAN)
-    onon_freq_mean.data = np.ma.average(onon_freq.data,axis=0,weights=precip_weights.data)
-    onon_freq_mean.var_name='prob_onon_mean'
-    onon_freq_mean.long_name='Probability of upper division neighbouring upper division (weighted mean of all months in wet season)'
-    onoff_freq_mean = onoff_freq.collapsed('month_number',iris.analysis.MEAN)
-    onoff_freq_mean.data = np.ma.average(onoff_freq.data,axis=0,weights=precip_weights.data)
-    onoff_freq_mean.var_name='prob_onoff_mean'
-    onoff_freq_mean.long_name='Probability of upper division neighbouring lower division (weighted mean of all months in wet season)'
-    offon_freq_mean = offon_freq.collapsed('month_number',iris.analysis.MEAN)
-    offon_freq_mean.data = np.ma.average(offon_freq.data,axis=0,weights=precip_weights.data)
-    offon_freq_mean.var_name='prob_offon_mean'
-    offon_freq_mean.long_name='Probability of lower division neighbouring upper division (weighted mean of all months in wet season)'
-    offoff_freq_mean = offoff_freq.collapsed('month_number',iris.analysis.MEAN)
-    offoff_freq_mean.data = np.ma.average(offoff_freq.data,axis=0,weights=precip_weights.data)
-    offoff_freq_mean.var_name='prob_offoff_mean'
-    offoff_freq_mean.long_name='Probability of lower division neighbouring lower division (weighted mean of all months in wet season)'
-    out_cubelist = [space_inter,onon_freq,onoff_freq,offon_freq,offoff_freq,lower_thresh,upper_thresh,space_inter_mean,onon_freq_mean,onoff_freq_mean,offon_freq_mean,offoff_freq_mean,precip_weights]
+    space_inter_mean.long_name='Spatial intermittency on-off metric based on '+str(ndivs)+' divisions (weighted mean of all months in wet season)'
+
+    out_cubelist = [space_inter,onon_freq,onoff_freq,offon_freq,offoff_freq,lower_thresh,upper_thresh,space_inter_mean,onon_prob,onon_prob_mean,onoff_prob,onoff_prob_mean,offon_prob,offon_prob_mean,offoff_prob,offoff_prob_mean,on_freq,off_freq]
     return(out_cubelist)
 
 def compute_spatial_onoff_metric_grid(precip,lower_thresh,upper_thresh,cyclic=True):
     import numpy as np
     import dask
-    upper_mask = precip.copy(data=np.where(precip.data >= upper_thresh.data,1,0)) 
-    lower_mask = precip.copy(data=np.where(precip.data <= lower_thresh.data,1,0))
+
+    upper_mask = precip.copy(data=np.ma.array(np.where(precip.data >= upper_thresh.data,1,0),mask=precip.data.mask))
+    lower_mask = precip.copy(data=np.ma.array(np.where(precip.data <= lower_thresh.data,1,0),mask=precip.data.mask))
     
     lon_coord = precip.coord('longitude')
     lat_coord = precip.coord('latitude')
     nlon = len(lon_coord.points)
     nlat = len(lat_coord.points)
 
-    onon = np.zeros((nlat,nlon),dtype=np.float32) ; onoff = np.zeros((nlat,nlon),dtype=np.float32) ; offon = np.zeros((nlat,nlon),dtype=np.float32) ; offoff = np.zeros((nlat,nlon),dtype=np.float32)
-#    precip = dask.delayed(precip)
-#    upper_thresh = dask.delayed(upper_thresh)
-    lower_mask = dask.delayed(lower_mask)
-    upper_mask = dask.delayed(upper_mask)
-    row_metrics = []
-    for lat in range(1,nlat-1):
-        row_metric = dask.delayed(compute_spatial_onoff_metric_row)(upper_thresh[lat-1:lat+2,:],lower_mask[:,lat-1:lat+2,:],upper_mask[:,lat-1:lat+2,:]) 
-        #row_metric = compute_spatial_onoff_metric_row(precip,lat,upper_thresh,lower_mask,upper_mask)
-        row_metrics.append(row_metric)
-    result = dask.compute(*row_metrics)
-#    result = np.ma.asarray(result)
-    result = np.reshape(result,(nlat-2,nlon,4))
-    onon[1:nlat-1,:] = result[:,:,0] ; onoff[1:nlat-1,:] = result[:,:,1] ; offon[1:nlat-1,:] = result[:,:,2] ; offoff[1:nlat-1,:] = result[:,:,3]
-    output = np.stack([onon,onoff,offon,offoff],axis=0)
+    onon_count = np.zeros((nlat,nlon),dtype=np.float32)
+    onoff_count = np.zeros((nlat,nlon),dtype=np.float32) 
+    offon_count = np.zeros((nlat,nlon),dtype=np.float32) 
+    offoff_count = np.zeros((nlat,nlon),dtype=np.float32)
+
+    shifts = []
+    for lat_shift in [-1,0,1]:
+        for lon_shift in [-1,0,1]:
+            if lon_shift == 0 and lat_shift == 0:
+                pass
+            else:
+                shift = dask.delayed(compute_spatial_onoff_metric_shift)(upper_mask,lower_mask,(lat_shift,lon_shift))
+                shifts.append(shift)
+    result = dask.compute(*shifts)
+    result = np.asarray(result)
+    onon_count = np.mean(result[:,0,:,:],axis=0)
+    onoff_count = np.mean(result[:,1,:,:],axis=0)
+    offon_count = np.mean(result[:,2,:,:],axis=0)
+    offoff_count = np.mean(result[:,3,:,:],axis=0)
+    for lat in [0,nlat-1]:
+        onon_count[lat,:] = np.ma.masked
+        onoff_count[lat,:] = np.ma.masked
+        offon_count[lat,:] = np.ma.masked
+        offoff_count[lat,:] = np.ma.masked
+
+    non = upper_mask.collapsed('time',iris.analysis.SUM)
+    noff = lower_mask.collapsed('time',iris.analysis.SUM)
+
+    output = np.stack([onon_count,onoff_count,offon_count,offoff_count,non.data,noff.data],axis=0)
     return(output)
 
-def compute_spatial_onoff_metric_row(upper_thresh,lower_mask,upper_mask):
-    import dask
-    lon_coord = upper_thresh.coord('longitude')
-    lat_coord = upper_thresh.coord('latitude')
-    nlon = len(upper_thresh.coord('longitude').points)
-    row_metric = np.zeros((nlon,4))
-    point_metrics = []
-    for lon in range(nlon):
-        if upper_thresh.data.mask[1,lon]:
-            point_metric = compute_spatial_onoff_metric_point(None,None,None,None)
-#            point_metrics.append(point_metric)
-        else:
-            if lon == 0:
-                min_lon = lon_coord.points[-1]-360
-            else:
-                min_lon = lon_coord.points[lon-1]
-            if lon == nlon-1:
-                max_lon = lon_coord.points[0]+360
-            else:
-                max_lon = lon_coord.points[lon+1]
-            upper_neighbors = upper_mask.intersection(longitude = (min_lon,max_lon), latitude = (lat_coord.points[0],lat_coord.points[2]))
-            lower_neighbors = lower_mask.intersection(longitude = (min_lon,max_lon), latitude = (lat_coord.points[0],lat_coord.points[2]))
-            on_neighbors_mask = upper_neighbors.copy() 
-            off_neighbors_mask = lower_neighbors.copy()
-            for y in range(len(upper_neighbors.coord('latitude').points)):
-                for x in range(len(upper_neighbors.coord('longitude').points)):
-                    on_neighbors_mask.data[:,y,x] = 1-upper_mask.data[:,1,lon] # Mask neighbors where central point is above upper threshold
-                    off_neighbors_mask.data[:,y,x] = 1-lower_mask.data[:,1,lon] # Mask neighbors where central point is below lower threshold
-            on_neighbors_mask.data[:,1,1] = 1 # Mask values at central point
-            off_neighbors_mask.data[:,1,1] = 1 # Mask values at central point
-            point_metric = compute_spatial_onoff_metric_point(on_neighbors_mask,off_neighbors_mask,upper_neighbors,lower_neighbors)
-        row_metric[lon,:] = point_metric
-#            point_metrics.append(point_metric)
-#    result = dask.compute(*point_metrics)
-#    row_metric[:,:] = np.ma.asarray(result).reshape((nlon,4))
-    return(row_metric)
+def compute_spatial_onoff_metric_shift(upper_mask,lower_mask,shift):
 
-def compute_spatial_onoff_metric_point(on_neighbors_mask=None,off_neighbors_mask=None,upper_neighbors=None,lower_neighbors=None):
-    import numpy as np
-    import iris
-    if on_neighbors_mask is None:
-        onon=np.ma.masked
-        onoff=np.ma.masked
-        offon=np.ma.masked
-        offoff=np.ma.masked
-    else:
-        onon_neighbors_masked = upper_neighbors.copy(data=np.ma.array(upper_neighbors.data,mask=on_neighbors_mask.data)) # Neighbors on and centre on
-        onoff_neighbors_masked = lower_neighbors.copy(data=np.ma.array(lower_neighbors.data,mask=on_neighbors_mask.data)) # Neighbors off and centre on
-        offon_neighbors_masked = upper_neighbors.copy(data=np.ma.array(upper_neighbors.data,mask=off_neighbors_mask.data)) # Neighbors on and centre off
-        offoff_neighbors_masked = lower_neighbors.copy(data=np.ma.array(lower_neighbors.data,mask=off_neighbors_mask.data)) # Neighbors off and centre off
-        onon = onon_neighbors_masked.collapsed(['time','latitude','longitude'],iris.analysis.MEAN).data
-        onoff = onoff_neighbors_masked.collapsed(['time','latitude','longitude'],iris.analysis.MEAN).data
-        offon = offon_neighbors_masked.collapsed(['time','latitude','longitude'],iris.analysis.MEAN).data
-        offoff = offoff_neighbors_masked.collapsed(['time','latitude','longitude'],iris.analysis.MEAN).data
-    output=np.stack([onon,onoff,offon,offoff],axis=0)
+    upper_roll = upper_mask.copy(data=np.ma.array(np.roll(upper_mask.data,shift,axis=(1,2)),mask=upper_mask.data.mask))
+    lower_roll = lower_mask.copy(data=np.ma.array(np.roll(lower_mask.data,shift,axis=(1,2)),mask=lower_mask.data.mask))
+    onon = upper_mask + upper_roll
+    onon_count = onon.collapsed('time',iris.analysis.COUNT,function=lambda values: values == 2)
+    onoff = upper_mask + lower_roll
+    onoff_count = onoff.collapsed('time',iris.analysis.COUNT,function=lambda values: values == 2)
+    offon = lower_mask + upper_roll
+    offon_count = offon.collapsed('time',iris.analysis.COUNT,function=lambda values: values == 2)
+    offoff = lower_mask + lower_roll
+    offoff_count = offoff.collapsed('time',iris.analysis.COUNT,function=lambda values: values == 2)
+    
+    output = np.stack([onon_count.data,onoff_count.data,offon_count.data,offoff_count.data],axis=0)
     return(output)

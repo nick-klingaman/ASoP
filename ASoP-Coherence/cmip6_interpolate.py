@@ -4,7 +4,7 @@ from pathlib import Path
 import glob
 import os
 import numpy as np
-import cmip6_dict as c6
+import asop_dict as adict
 import argparse
 
 def interp_nxn(cube,n):
@@ -50,13 +50,13 @@ overwrite = args.overwrite
 gridn = args.grid
 
 if model_set is not None:
-    key_list = c6.get_key_list(model_set)
+    key_list = adict.get_key_list(model_set)
 else:
     key_list = [model,]
 
 for model in key_list:
     print('--> '+model)
-    asop_dict = c6.get_asop_dict(model,timetype)
+    asop_dict = adict.get_asop_dict(model,timetype)
     print(asop_dict['dir'],asop_dict['file_pattern'])
     infiles = glob.glob(str(asop_dict['dir'])+'/'+asop_dict['file_pattern'])
     for infile in infiles:

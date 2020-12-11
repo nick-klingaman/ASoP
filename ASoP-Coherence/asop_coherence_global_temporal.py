@@ -10,7 +10,7 @@ import dask
 from dask.distributed import Client,progress
 import os
 import asop_coherence_global as asop_global
-import cmip6_dict as c6
+import asop_dict as adict
 import argparse
 
 
@@ -22,22 +22,25 @@ if __name__ == '__main__':
     parser.add_argument('-t',dest='time',help='Frequency to process (eg 3hr, day)')
     parser.add_argument('-n',dest='grid',help='Grid spacing to process (in degrees, eg 2x2)')
     parser.add_argument('-o',dest='overwrite',action='store_true',default=False,required=False)
-    parser.add_argument('-w',dest='workers',default=12,required=False,help='Number of workers (processes)')
+    parser.add_argument('-d',dest='diag_overwrite',action='store_true',default=False,required=False)
+    parser.add_argument('-w',dest='workers',default=None,required=False,help='Number of workers (processes)')
     args = parser.parse_args()
     model = args.model
     model_set = args.model_set
     if model_set is None and model is None:
         raise Exception("You must specify at least a model (-m) or model set (-s)")
     if model_set is not None:
-        key_list = c6.get_key_list(model_set)
+        key_list = adict.get_key_list(model_set)
     else:
         key_list = [model,]
     timetype = args.time
     grid = args.grid
-    workers = int(args.workers)
     masked_overwrite = args.overwrite
-
-    client = Client(n_workers=workers)
+    diag_overwrite = args.diag_overwrite
+    if args.workers is not None:
+        client = Client(n_workers=int(args.workers),connection_limit=4096,processes=False)
+    else:
+        client = Client(connection_limit=1024,processes=False)
     wet_season_threshold = 1.0/24.0
     wet_season_threshold_str='1d24'
     min_precip_threshold = 1.0 # mm/day
@@ -45,7 +48,7 @@ if __name__ == '__main__':
 
     for model in key_list:
         print('--> '+model)
-        asop_dict = c6.get_asop_dict(model,timetype,grid=grid)
+        asop_dict = adict.get_asop_dict(model,timetype,grid=grid)
         year_range = str(asop_dict['start_year'])+'-'+str(asop_dict['stop_year'])
 
         masked_precip_file=str(asop_dict['dir'])+'/'+asop_dict['desc']+'_asop_'+year_range+'_masked_precip_wetseason'+wet_season_threshold_str+'.nc'
@@ -80,17 +83,18 @@ if __name__ == '__main__':
             masked_min_precip.long_name='Masked precipitation for wet season (threshold '+wet_season_threshold_str+' of annual total) and min mean precip (threshold '+min_precip_threshold_str+' mm/day)'
             with dask.config.set(scheduler='synchronous'):
                 iris.save(masked_min_precip,masked_min_precip_file)
-        if os.path.exists(temporal_summary_file) and not masked_overwrite:
+        if os.path.exists(temporal_summary_file) and not diag_overwrite:
             print('-->--> Will not overwrite existing temporal summary output file')
-        else:
-            print('-->--> Computing temporal autocorrelation metrics')
-            temporal_autocorr = asop_global.compute_temporal_autocorr(masked_min_precip,range(17))
-            with dask.config.set(scheduler='synchronous'):
-                iris.save(temporal_autocorr,temporal_summary_file)
-        if os.path.exists(temporal_autocorr_file) and not masked_overwrite:
-            print('-->--> Will not overwrite existing temporal correlation output file')
         else:
             print('-->--> Computing temporal summary metrics')
             temporal_summary = asop_global.compute_temporal_summary(masked_min_precip,4)
             with dask.config.set(scheduler='synchronous'):
-                iris.save(temporal_summary,temporal_autocorr_file)
+                iris.save(temporal_summary,temporal_summary_file)
+        if os.path.exists(temporal_autocorr_file) and not diag_overwrite:
+            print('-->--> Will not overwrite existing temporal correlation output file')
+        else:
+            print('-->--> Computing temporal autocorrelation metrics')
+            temporal_autocorr = asop_global.compute_temporal_autocorr(masked_min_precip,range(17))
+            with dask.config.set(scheduler='synchronous'):
+                iris.save(temporal_autocorr,temporal_autocorr_file)
+

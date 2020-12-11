@@ -7,9 +7,9 @@ import iris.coord_categorisation
 from iris.experimental.equalise_cubes import equalise_attributes
 from iris.util import unify_time_units
 import dask
-from dask.distributed import Client,progress
+from dask.distributed import Client,progress,LocalCluster
 import os
-import cmip6_dict as c6
+import asop_dict as adict
 import asop_coherence_global as asop_global
 import argparse
 
@@ -21,22 +21,31 @@ if __name__ == '__main__':
     parser.add_argument('-t',dest='time',help='Frequency to process (eg 3hr, day)')
     parser.add_argument('-n',dest='grid',help='Grid spacing to process (in degrees, eg 2x2)')
     parser.add_argument('-o',dest='overwrite',action='store_true',default=False,required=False)
-    parser.add_argument('-w',dest='workers',default=12,required=False,help='Number of workers (processes)')
+    parser.add_argument('-d',dest='diag_overwrite',action='store_true',default=False,required=False)
+    parser.add_argument('-w',dest='workers',default=None,required=False,help='Number of workers (processes)')
     args = parser.parse_args()
     model = args.model
     model_set = args.model_set
     if model_set is None and model is None:
         raise Exception("You must specify at least a model (-m) or model set (-s)")
     if model_set is not None:
-        key_list = c6.get_key_list(model_set)
+        key_list = adict.get_key_list(model_set)
     else:
         key_list = [model,]
     timetype = args.time
     grid = args.grid
-    workers = int(args.workers)
+   # workers = int(args.workers)
     masked_overwrite = args.overwrite
+    diag_overwrite = args.diag_overwrite
     
-    client = Client(n_workers=workers)
+    if args.workers is not None:
+        cluster = LocalCluster(scheduler_port=0,dashboard_address=0,n_workers=int(args.workers),connection_limit=4096)
+        client = Client(cluster) #,processes=False)
+    else:
+        cluster = LocalCluster(scheduler_port=0,dashboard_address=0,connection_limit=4096)
+        client = Client(cluster) #,processes=False)
+    print(client)
+#        client = Client(connection_limit=1024) #,processes=False)
     wet_season_threshold = 1.0/24.0
     wet_season_threshold_str='1d24'
     min_precip_threshold = 1.0 # mm/day
@@ -44,7 +53,7 @@ if __name__ == '__main__':
 
     for model in key_list:
         print('--> '+model)
-        asop_dict = c6.get_asop_dict(model,timetype,grid=grid)
+        asop_dict = adict.get_asop_dict(model,timetype,grid=grid)
         year_range = str(asop_dict['start_year'])+'-'+str(asop_dict['stop_year'])
 
         masked_precip_file=str(asop_dict['dir'])+'/'+asop_dict['desc']+'_asop_'+year_range+'_masked_precip_wetseason'+wet_season_threshold_str+'.nc'
@@ -89,14 +98,14 @@ if __name__ == '__main__':
             with dask.config.set(scheduler='synchronous'):
                 iris.save(haversine_map,haversine_file)
 
-        if os.path.exists(spatial_summary_file) and not masked_overwrite:
+        if os.path.exists(spatial_summary_file) and not diag_overwrite:
             print('-->--> Will not overwrite existing spatial summary output file')
         else:
             print('-->--> Computing spatial summary metrics')
             spatial_summary = asop_global.compute_spatial_summary(masked_min_precip,4)
             with dask.config.set(scheduler='synchronous'):
                 iris.save(spatial_summary,spatial_summary_file)
-        if os.path.exists(spatial_corr_file) and not masked_overwrite:
+        if os.path.exists(spatial_corr_file) and not diag_overwrite:
             print('-->--> Will not overwrite existing spatial correlations output file')
         else:
             print('-->--> Computing spatial correlation metrics')
