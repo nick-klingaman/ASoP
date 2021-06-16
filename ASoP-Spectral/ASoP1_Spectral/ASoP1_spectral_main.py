@@ -71,7 +71,9 @@ def main(data_filename1,data_filename2,hist_filename1,hist_filename2,obs_hist_fi
     plot_1d_histograms(filenames,runtitles,filenames_obs,runtitles_obs,timescale,
                                          myregion,plottitle,plotname_root)
     
-    # Set up list of filenames and runtitles for 1d histogram DIFFERENCE plots
+    # Set up LIST OF LIST PAIRS of filenames and runtitles for 1d histogram DIFFERENCE plots
+    # e.g. filenames=[[a,b],[c,d],[e,f]]
+    # Each list pair e.g. [a,b] will be differenced (b-a)
     # Please edit plotname_root, plottitle, runtitles and timescale, as well as region, 
     # as required.
     
