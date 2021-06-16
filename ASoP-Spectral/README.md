@@ -83,7 +83,7 @@ Modules
 * plot_hist1d.py:
     * guessbounds: Function to guess bounds for gridboxes
     * calc_1d_contr: Function to output 1d histogram of contributions
-    * plot_1dhist: Function to plot 1d histograms over given region. Can also plot DIFFERENCES between 1d histograms in pairs of files, if input as list of pairs.
+    * plot_1dhist: Function to plot 1d histograms over given region. Can also plot DIFFERENCES between 1d histograms in pairs of files, if input as a LIST OF LISTS of pairs.
 
 * ASoP1_spectral_main.py: 
     * an additional set of modules included to illustrate how the modules above might be used. 
