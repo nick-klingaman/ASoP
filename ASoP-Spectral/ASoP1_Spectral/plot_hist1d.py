@@ -83,16 +83,18 @@ def plot_1dhist(plotname,region,filenames,runtitles,plottitle,timescale=None,fil
        [W,S,E,N] limits of region to average over
     * filenames:
        list of filenames for files of histograms (output from make_hist_maps)
-       OR list of PAIRS OF filenames for differencing (b-a) in which case filenames_obs etc should be OMITTED.
+       OR list of LIST PAIRS OF filenames (e.g. [[file1,file2],[file3,file4]]) for differencing (b-a) 
+       in which case filenames_obs etc should be OMITTED.
     * runtitles:
        list of runtitles for legend (must have title for all filenames)
-       OR list of PAIRS OF runtitles for differencing, matching the filename pairs (b-a).
+           NOTE this could be dataset names, timescales, whatever is appropriate.
+       OR list of LIST PAIRS OF runtitles (e.g. [[title1,title2],[title3,title4]]) for differencing, matching the filename pairs (b-a).
     * plottitle:
        main title for plot
 
     Optional arguments:
     * timescale:
-       If set, adds the timescale to the plot subtitle
+       If set, adds the timescale to the plot subtitle (best left blank if you are putting timescales in as runtitles)
     * filenames_obs:
        list of obs filenames for files of histograms (output from make_hist_maps)
     * runtitles_obs:
