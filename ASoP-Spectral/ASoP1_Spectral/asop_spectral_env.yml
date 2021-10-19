@@ -1,0 +1,11 @@
+name: _CMEC_asop_spectral
+channels:
+  - conda-forge
+dependencies:
+  - iris
+  - matplotlib
+  - matplotlib-base
+  - netcdf4
+  - numpy
+  - python>=3.6
+  - scipy

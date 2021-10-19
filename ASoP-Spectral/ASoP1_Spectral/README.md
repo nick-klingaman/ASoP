@@ -56,3 +56,14 @@ Modules
             -h, --help  show this help message and exit
 
 
+## CMEC Driver support
+The following files are included for use with cmec-driver.
+* ASoP1_spectral_cmec_workflow.py: ASoP Spectral workflow script.
+  * This script follows a similar workflow as ASoP1_spectral_main.py, but in a way that is compatible with the CMEC standards.
+* asop_spectral.sh: Driver script (identified in asop_spectral.json and called by cmec-driver at runtime)
+  * Calls ASoP1_spectral_cmec_workflow.py 
+* asop_spectral.json: CMEC settings file for Spectral configuration
+* asop_spectral_env.yml: Template for "_CMEC_asop_spectral" conda environment
+* set_descriptive_text.py: Function containing descriptive text for html page.
+  * Called by ASoP1_spectral_cmec_workflow.py
+

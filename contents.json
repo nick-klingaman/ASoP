@@ -1,0 +1,7 @@
+{
+    "module": {
+        "name": "ASoP",
+        "long_name": "Analysing Scales of Precipitation"
+    },
+    "contents": ["ASoP-Coherence/asop_coherence.json","ASoP-Spectral/ASoP1_Spectral/asop_spectral.json"]
+}
