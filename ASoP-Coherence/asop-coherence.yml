@@ -1,0 +1,12 @@
+name: asop-coherence
+channels:
+  - ncas
+  - conda-forge
+  - defaults
+dependencies:
+  - cf-plot=3.0.19
+  - cf-python=3.0.1
+  - iris=3.0.1
+  - matplotlib=3.2.0
+  - matplotlib-base=3.2.0
+  - python=3.7.6

@@ -1,0 +1,29 @@
+{
+    "settings": {
+        "name": "Spectral",
+        "driver": "ASoP-Spectral/ASoP1_Spectral/asop_spectral.sh",
+        "async": null,
+        "long_name": "Analysing Scales of Precipitation (ASoP) spectral analysis",
+        "description": "Code to create histogram maps of rainfall intensities on any given timescale.",
+        "runtime": {"ASoP":"v1","python3": ["matplotlib","iris"]},
+        "selftest_script": "tests/ASoP1_tests.py"
+    },
+    "varlist": {
+        "precipitation": {
+            "units": ["kg m-2 s-1","kg m-2 day-1","mm day-1"],
+            "frequency": "all",
+            "note": "Datasets of accumulated rainfall over specified time periods must include the accumulation time as part of the unit. E.g 3-hourly accumulations have units mm 3h-1"
+        }
+    },
+    "obslist": {
+        "IMERG": {
+            "version": "obs4mips",
+            "description": "IMERG precipitation from obs4mips"
+        }
+    },
+    "coordinates": {},
+    "default_parameters": {
+        "regions": {"Indian Ocean": [-10,10,60,90]},
+        "mask": null
+    }
+}

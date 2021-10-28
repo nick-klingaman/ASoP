@@ -1,7 +1,7 @@
 # ASoP-Coherence
 **Code to diagnose spatial and temporal coherence of precipitation intensities on any given timescale.**
 
-**Part of the ASoP (Aanalysing Scales of Precipitation) v1.0 package.**
+**Part of the ASoP (Analysing Scales of Precipitation) v1.0 package.**
 
 This set of Python modules generates a variety of diagnostics and metrics of spatial and temporal coherence (or intermittency) of precipitation amounts on any input timescale and horizontal grid.
 
@@ -59,3 +59,12 @@ There are two files: asop_coherence.py contains all required functions to produc
 * asop_coherence_example.py: ASoP-Coherence example
   * get_dictionary: Demonstrates how to build a dictionary of dataset information needed by the ASoP-Coherence functions
   * __main__: Main procedure that calls each of the ASoP-Coherence functions in turn.
+
+## CMEC Driver support
+The following files are included for use with cmec-driver.
+* ASoP_coherence_cmec_workflow.py: ASoP Coherence workflow script.
+  * This script follows a similar workflow as asop_coherence_example.py, but in a way that is compatible with the CMEC standards.
+* asop_coherence.sh: Driver script (identified in asop_coherence.json and called by cmec-driver at runtime)
+  * Calls ASoP_coherence_cmec_workflow.py 
+* asop_coherence.json: CMEC settings file for Coherence configuration
+* asop_coherence_env.yml: Template for "_CMEC_asop_coherence" conda environment
