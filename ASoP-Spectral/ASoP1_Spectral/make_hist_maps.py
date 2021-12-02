@@ -152,7 +152,7 @@ def make_hist_ppn(ppn_cube,region=None):
     """
 
 # Ensure precipitation data are in correct units for pbin definitions
-
+    print("  Original precipitation units are",str(ppn_cube.units))
     if (ppn_cube.units == '') or (ppn_cube.units is None):
         raise ValueError('Data cube has no units!')
     else:
@@ -162,19 +162,21 @@ def make_hist_ppn(ppn_cube,region=None):
             t1 = ppn_cube.coords('time')[0][0].cell(0).point
             t2 = ppn_cube.coords('time')[0][1].cell(0).point
             try:
+                print("  Calculating dt for conversion from accumulation to rate.")
                 dt = int((t2 - t1).total_seconds())
+                print("  dt =",dt)
             except AttributeError:
                 raise AttributeError('Time coordinate units not found in cube.')
             new_units = str(ppn_cube.units) + str(dt) + '-1 s-1'
             ppn_cube.units = new_units
             ppn_cube.convert_units('mm day-1')
-        if (str(ppn_cube.units)[0:1] == 'm'):
+        elif (str(ppn_cube.units)[0:1] == 'm'):
             ppn_cube.convert_units('mm day-1')
         elif (str(ppn_cube.units)[0:2] == 'kg') or (str(ppn_cube.units)[0:1] == 'g'):
             ppn_cube.convert_units('kg m-2 day-1')
         else:
             raise ValueError('Unrecognised units:',str(ppn_cube.units))
-
+    print("  Precipitation units converted to",(ppn_cube.units))
 # Extract region if required
 
     if region:
