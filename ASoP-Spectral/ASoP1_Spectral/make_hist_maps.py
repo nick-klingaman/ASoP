@@ -176,7 +176,7 @@ def make_hist_ppn(ppn_cube,region=None):
             ppn_cube.convert_units('kg m-2 day-1')
         else:
             raise ValueError('Unrecognised units:',str(ppn_cube.units))
-    print("  Precipitation units converted to",(ppn_cube.units))
+    print("  Precipitation units converted to",str(ppn_cube.units))
 # Extract region if required
 
     if region:
