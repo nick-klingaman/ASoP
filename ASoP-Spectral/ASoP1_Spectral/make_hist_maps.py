@@ -164,7 +164,7 @@ def make_hist_ppn(ppn_cube,region=None):
             try:
                 print("  Calculating dt for conversion from accumulation to rate.")
                 dt = int((t2 - t1).total_seconds())
-                print("  dt =",str(dt))
+                print("  dt =",str(dt),"s")
             except AttributeError:
                 raise AttributeError('Time coordinate units not found in cube.')
             new_units = str(ppn_cube.units) + str(dt) + '-1 s-1'
