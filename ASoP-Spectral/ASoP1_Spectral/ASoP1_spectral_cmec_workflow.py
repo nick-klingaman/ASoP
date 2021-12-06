@@ -66,7 +66,7 @@ def main(model_dir, obs_dir, wk_dir, config_path=None, settings=None):
         print("Loading configuration file")
         with open (config_path,"r") as fname:
             settings=json.load(fname)["ASoP/Spectral"]
-        print("Settings from configuration file:\n",json.dumps(settings))
+        print("Settings from configuration file:\n",json.dumps(settings, indent=4))
     elif settings is None:
             settings={
                 "regions": {"default":[-10.0, 10.0, 60.0, 160.0]},
@@ -214,6 +214,7 @@ def making_histogram_files(filename_list,wk_dir):
     """
     desc = {}
     for fname in filename_list:
+        print("Loading cube for",fname)
         fname_tmp = os.path.basename(fname)
         hname = os.path.join(wk_dir,".".join(fname_tmp.split(".")[:-1])+"_hist.nc")
         ppndata1=make_hist_maps.read_data_cube(fname)

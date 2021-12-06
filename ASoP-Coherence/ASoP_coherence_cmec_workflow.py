@@ -52,7 +52,8 @@ def get_dictionary(filename):
     """
     asop_dict = {}
     # Defaults for standard observational data
-    if 'default' in filename:
+    if 'CMORPH_V1.0.mjodiab_period_3hrmeans.precip.nc' in filename or \
+       'TRMM_3B42V7A.mjodiab_period_3hrmeans.precip.nc' in filename:
         asop_dict['infile']       = filename
         asop_dict['name']         = ''
         asop_dict['dt']           = 10800
